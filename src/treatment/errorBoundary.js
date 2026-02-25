@@ -12,7 +12,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    location.href = "/404";
+    //location.href = "/404";
     console.error("Erro capturado pelo boundary:", error, errorInfo);
   }
 
