@@ -28,7 +28,7 @@ export default function CtaSection() {
               Ela pode virar uma vaquinha
             </Typography>
           </Stack>
-          <Link href="/criar-Acolher">
+          <Link href="/criar-campanha">
             <Button variant="contained"
               sx={{
                 p: 1.5,
