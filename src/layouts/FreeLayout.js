@@ -8,7 +8,7 @@ const FreeLayout = ({ children }) => {
     <>
       <ThemeProvider theme={theme}>
         <Head>
-          <title>Kaixinha</title>
+          <title>Acolher</title>
           <meta name="description" content="Descrição da sua aplicação" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="icon" href="/favicon.ico" type="image/x-icon" />
