@@ -1,0 +1,38 @@
+{
+  "name": "kaixinha-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.5",
+    "@mui/lab": "^6.0.0-beta.14",
+    "@mui/material": "^6.1.5",
+    "aws-sdk": "^2.1692.0",
+    "axios": "^1.9.0",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.4.3",
+    "next": "^15.0.2",
+    "quill-image-resize-module": "^3.0.0",
+    "quill-resize-image": "^1.0.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-input-mask": "^2.0.4",
+    "react-material-ui-carousel": "^3.4.2",
+    "react-phone-number-input": "^3.4.10",
+    "react-quill": "^2.0.0",
+    "react-rte": "^0.16.5",
+    "react-toastify": "^10.0.6",
+    "swiper": "^11.1.14"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "15.0.2"
+  }
+}
