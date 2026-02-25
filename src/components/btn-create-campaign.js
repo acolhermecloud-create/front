@@ -4,7 +4,7 @@ export default function BtnCreateCampaing() {
   const theme = useTheme();
 
   return (
-    <Link href="/criar-kaixinha">
+    <Link href="/criar-campanha">
       <Button
         variant="contained"
         sx={{

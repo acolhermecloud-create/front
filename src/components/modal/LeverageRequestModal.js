@@ -104,7 +104,7 @@ const theme = useTheme();
             </Stack>
             <Typography fontSize={{ xs: '0.785rem', sm: '0.875em' }} component="h2" gutterBottom>
               Ao preencher esse formulário nós analisaremos todas as informações e iremos entrar em contato
-              sobre o pedido de alavancagem da sua Kaixinha.
+              sobre o pedido de alavancagem da sua Campanha.
             </Typography>
             <Divider sx={{ mt: 1, mb: 1 }} />
 
@@ -237,7 +237,7 @@ const theme = useTheme();
                   }}
                   onClick={handleGoToMyCampaings}
                 >
-                  Ver minhas kaixinhas
+                  Ver minhas Campanhas
                 </Button>
             </Stack>
           </>

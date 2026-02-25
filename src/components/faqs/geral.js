@@ -18,7 +18,7 @@ export default function FaqGeneral() {
               aria-controls="panel2-content"
               id="panel2-header"
             >
-              <Typography fontWeight={500}>Taxas do Kaixinha</Typography>
+              <Typography fontWeight={500}>Taxas do Campanha</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography>
@@ -48,7 +48,7 @@ export default function FaqGeneral() {
               aria-controls="panel2-content"
               id="panel2-header"
             >
-              <Typography fontWeight={500}>É possível abrir uma vaquinha na Kaixinha?</Typography>
+              <Typography fontWeight={500}>É possível abrir uma vaquinha na Campanha?</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography>
