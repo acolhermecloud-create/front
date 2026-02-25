@@ -36,11 +36,14 @@ import { useTheme } from "@mui/material/styles"
 import { useAuth } from "@/context/AuthContext"
 import usePixelEvent from "@/hooks/usePixelEvent"
 import useFacebookPixelApi from "@/hooks/useFacebookPixelApi"
+import useGoogleAnalytics from "@/hooks/useGoogleAnalytics"
+import { useUtm } from "@/hooks/useUtm"
 
 export default function CheckoutDonate() {
   const router = useRouter()
-  const { id, value, image, utm_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, sub1 } =
-    router.query
+  const { id, value, image } = router.query
+
+  const utm = useUtm()
 
   const isMounted = useRef(true)
   const { handleGetCampaignBySlug, handleGeneratePaymentViaPIX, checkPaymentDonation, handleRecordUtm } = useCampaign()
@@ -56,6 +59,8 @@ export default function CheckoutDonate() {
     trackPurchase,
     trackLead,
   } = useFacebookPixelApi()
+
+  const ga = useGoogleAnalytics()
 
   const [expanded, setExpanded] = useState("panel1")
 
@@ -99,28 +104,47 @@ export default function CheckoutDonate() {
     const [firstName, ...lastNameParts] = name.split(" ")
     const lastName = lastNameParts.join(" ")
 
+    const valueNumber = Number.parseFloat(
+      (Number.parseInt(valueOfDonation || "0") / 100).toFixed(2),
+    )
+
     return {
       email: email || "",
       phone: phone || "",
       firstName: firstName || "",
       lastName: lastName || "",
-      value: Number.parseFloat((Number.parseInt(valueOfDonation) / 100).toFixed(2)),
+      value: valueNumber,
       currency: "BRL",
+
       contentName: campaign?.title || "",
       contentCategory: "donation",
       contentIds: [campaign?.id?.toString() || id?.toString() || ""],
+
       eventId: `${campaign?.slug || id}_${Date.now()}`,
       externalId: loggedUser?.id || null,
       country: "br",
-      // UTM parameters
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_term,
-      utm_content,
-      utm_id,
-      fbclid,
-      sub1,
+
+      // 🔥 UTMs (Google, Meta, orgânico, afiliado)
+      utm_source: utm.utm_source || "",
+      utm_medium: utm.utm_medium || "",
+      utm_campaign: utm.utm_campaign || "",
+      utm_term: utm.utm_term || "",
+      utm_content: utm.utm_content || "",
+      utm_id: utm.utm_id || "",
+
+      // 🔥 Click IDs separados
+      fbclid: utm.fbclid || "",
+      gclid: utm.gclid || "",
+
+      // 🔥 Identificador de afiliado / fallback
+      sub1: utm.sub1 || utm.fbclid || utm.gclid || "",
+
+      // 🔥 Fonte de tráfego detectada (útil pra backend / BI)
+      traffic_source: utm.fbclid
+        ? "meta_ads"
+        : utm.gclid
+          ? "google_ads"
+          : utm.utm_source || "direct",
     }
   }
 
@@ -138,6 +162,31 @@ export default function CheckoutDonate() {
           await trackLead({
             ...trackingData,
             eventId: `lead_${campaign?.slug || id}_${Date.now()}`,
+          })
+
+          ga.trackBeginCheckout({
+            value: trackingData.value,
+            currency: "BRL",
+
+            utm_source: trackingData.utm_source,
+            utm_medium: trackingData.utm_medium,
+            utm_campaign: trackingData.utm_campaign,
+            utm_term: trackingData.utm_term,
+            utm_content: trackingData.utm_content,
+
+            gclid: trackingData.gclid,
+          })
+          ga.trackGenerateLead({
+            value: trackingData.value,
+            currency: "BRL",
+
+            utm_source: trackingData.utm_source,
+            utm_medium: trackingData.utm_medium,
+            utm_campaign: trackingData.utm_campaign,
+            utm_term: trackingData.utm_term,
+            utm_content: trackingData.utm_content,
+
+            gclid: trackingData.gclid,
           })
         }
       }
@@ -257,6 +306,7 @@ export default function CheckoutDonate() {
       await sendUtmfyData(
         response.data.id,
         "waiting_payment",
+        trackingData,
         name,
         email,
         phone,
@@ -272,6 +322,12 @@ export default function CheckoutDonate() {
       await sendEventToFacebook("GenerateLead", {
         ...trackingData,
         eventId: `pix_generated_${campaign?.slug || id}_${Date.now()}`,
+      })
+
+      // Google Analytics - add_payment_info
+      ga.trackAddPaymentInfo({
+        value: trackingData.value,
+        paymentType: "pix",
       })
     } else {
       toast.warning(response?.data?.message ?? "Verifique o valor digitado!")
@@ -326,6 +382,29 @@ export default function CheckoutDonate() {
           ...trackingData,
           eventId: `conversion_${transactionId}_${Date.now()}`,
         })
+
+        // Google Analytics - purchase com UTMs
+        ga.trackPurchase({
+          transactionId: transactionId,
+          value: trackingData.value,
+          currency: "BRL",
+          items: [
+            {
+              item_id: trackingData.contentIds[0],
+              item_name: trackingData.contentName,
+              price: trackingData.value,
+              quantity: 1,
+            },
+          ],
+
+          utm_source: trackingData.utm_source,
+          utm_medium: trackingData.utm_medium,
+          utm_campaign: trackingData.utm_campaign,
+          utm_term: trackingData.utm_term,
+          utm_content: trackingData.utm_content,
+
+          gclid: trackingData.gclid,
+        })
       }
     }
   }
@@ -333,6 +412,7 @@ export default function CheckoutDonate() {
   const sendUtmfyData = async (
     orderId,
     status,
+    trackingData,
     customerName,
     customerEmail,
     customerPhone,
@@ -346,7 +426,10 @@ export default function CheckoutDonate() {
     const payload = {
       orderId,
       status,
-      approvedDat: status === "paid" ? new Date().toISOString().slice(0, 19).replace("T", " ") : null,
+      approvedDat:
+        status === "paid"
+          ? new Date().toISOString().slice(0, 19).replace("T", " ")
+          : null,
       customer: {
         name: customerName,
         email: customerEmail,
@@ -364,14 +447,15 @@ export default function CheckoutDonate() {
         },
       ],
       trackingParameters: {
-        utmSource: utm_source,
-        utmCampaign: utm_campaign,
-        utmMedium: utm_medium,
-        utmContent: utm_content,
-        utmTerm: utm_term,
-        utmId: utm_id,
-        fbclid: fbclid,
-        sub1: sub1,
+        utmSource: trackingData.utm_source,
+        utmMedium: trackingData.utm_medium,
+        utmCampaign: trackingData.utm_campaign,
+        utmContent: trackingData.utm_content,
+        utmTerm: trackingData.utm_term,
+        utmId: trackingData.utm_id,
+        fbclid: trackingData.fbclid,
+        gclid: trackingData.gclid,
+        sub1: trackingData.sub1,
       },
       commission: {
         totalPriceInCents: productPrice,
@@ -380,8 +464,22 @@ export default function CheckoutDonate() {
       },
     }
 
-    const data = await handleRecordUtm(payload)
-    console.log("✅🔥 utmfy", data)
+    try {
+      console.group("📡 UTMFY SEND")
+      console.log("🧾 orderId:", orderId)
+      console.log("🏷️ UTMs:", payload.trackingParameters)
+      console.log("📤 payload:", payload)
+
+      const response = await handleRecordUtm(payload)
+
+      console.log("✅ RESPONSE:", response)
+      console.groupEnd()
+    } catch (error) {
+      console.group("❌ UTMFY ERROR")
+      console.error("orderId:", orderId)
+      console.error("erro:", error)
+      console.groupEnd()
+    }
   }
 
   useEffect(() => {
@@ -410,6 +508,24 @@ export default function CheckoutDonate() {
         contentName: id,
         contentCategory: "donation",
         eventId: `pageview_${id}_${Date.now()}`,
+      })
+
+      const trackingData = getTrackingData()
+
+      trackPageView({
+        value: trackingData.value,
+        currency: "BRL",
+        contentName: trackingData.contentName,
+        contentCategory: "donation",
+        eventId: `pageview_${trackingData.contentIds[0]}_${Date.now()}`,
+
+        utm_source: trackingData.utm_source,
+        utm_medium: trackingData.utm_medium,
+        utm_campaign: trackingData.utm_campaign,
+        utm_term: trackingData.utm_term,
+        utm_content: trackingData.utm_content,
+
+        gclid: trackingData.gclid,
       })
     }
   }, [id, value])
