@@ -129,7 +129,7 @@ export default function CampaignStepperOne({
   return (
     <Box>
       <Stack mt={1} sx={{ maxWidth: 380 }} display={"flex"} alignItems={"center"}>
-        <Typography variant="h4" color="initial">Vamos criar sua kaixinha</Typography>
+        <Typography variant="h4" color="initial">Vamos criar sua Campanha</Typography>
         <Typography mt={1} variant="body2" color="initial">
           Estamos aqui para apoiar você durante essa jornada.
         </Typography>
@@ -154,12 +154,12 @@ export default function CampaignStepperOne({
         />
       </Stack>
       <Stack my={3} sx={{ maxWidth: 380 }}>
-        <Typography variant="h5" color="primary">Defina um nome para sua kaixinha</Typography>
+        <Typography variant="h5" color="primary">Defina um nome para sua Campanha</Typography>
         <TextField
           size="small"
           sx={{ mt: 2 }}
           id="outlined-basic"
-          label="Titulo da sua kaixinha"
+          label="Titulo da sua Campanha"
           variant="outlined"
           value={title}
           onChange={(e) => handleSetTitle(e.target.value)}

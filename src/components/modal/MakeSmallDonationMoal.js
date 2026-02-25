@@ -25,7 +25,7 @@ export const MakeSmallDonationMoal = ({ campaignId, open, onClose, updateSmallDo
       setDonationSuccessfull(true);
       updateSmallDonation(amount);
     } else {
-      toast.error("Erro ao fazer a contribuição, verifique se tem kaixinhas suficientes");
+      toast.error("Erro ao fazer a contribuição, verifique se tem Campanhas suficientes");
     }
 
     handleCloseLoading();
@@ -47,13 +47,13 @@ export const MakeSmallDonationMoal = ({ campaignId, open, onClose, updateSmallDo
         {!donationSuccessfull && (
           <>
             <Typography textAlign={'center'} variant="h5" fontWeight={400} component="h2">
-              Contribuir com kaixinhas
+              Contribuir com Campanhas
             </Typography>
             <Typography textAlign={'center'}>
               Você está perto de fazer uma boa ação
             </Typography>
             <Typography variant="body2" textAlign={'center'} mt={3}>
-              Informe a quantidade de kaixinhas que você quer doar
+              Informe a quantidade de Campanhas que você quer doar
             </Typography>
             <Stack direction={'row'} display={'flex'} justifyContent={'center'}>
               <TextField
@@ -77,7 +77,7 @@ export const MakeSmallDonationMoal = ({ campaignId, open, onClose, updateSmallDo
               />
             </Stack>
             <Typography mt={1} variant="body2" color="initial">Como isso ajuda as campanhas?</Typography>
-            <Typography mt={1} variant="body2" fontSize={12} color="initial">As kaixinhas garantem alimentação e cuidados médicos.</Typography>
+            <Typography mt={1} variant="body2" fontSize={12} color="initial">As Campanhas garantem alimentação e cuidados médicos.</Typography>
             <Typography variant="body2" fontSize={12} color="initial">Ajudam a manter o abrigo e o bem-estar das vaquinhas.</Typography>
             <Typography variant="body2" fontSize={12} color="initial">Contribuem para projetos de preservação e sustentabilidade.</Typography>
             <Stack mt={1} direction={'row'} display={'flex'} justifyContent={'space-between'}>
@@ -121,7 +121,7 @@ export const MakeSmallDonationMoal = ({ campaignId, open, onClose, updateSmallDo
             <Typography textAlign={'center'} variant="h5" fontWeight={400} component="h2">
               Parabéns
             </Typography>
-            <Typography mt={1} variant="body2" color="initial">Você acaba de contribuir com {amount} Kaixinha {amount > 1 && (<>s</>)}</Typography>
+            <Typography mt={1} variant="body2" color="initial">Você acaba de contribuir com {amount} Campanha {amount > 1 && (<>s</>)}</Typography>
             <Button
               variant="contained"
               color="primary"
