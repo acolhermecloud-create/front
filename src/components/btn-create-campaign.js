@@ -19,7 +19,7 @@ export default function BtnCreateCampaing() {
           },
         }}
       >
-        CRIAR VAQUINHA
+        CRIAR CAMPANHA
       </Button>
     </Link>
   );
