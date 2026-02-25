@@ -44,10 +44,10 @@ export const DefineValueOfDonationModal = () => {
 
     console.log("Redirecionando para checkout com payload:", payload);
 
-    {/*router.push({
+    router.push({
       pathname: `/vaquinha/checkout/${campaign.slug}`,
       query: payload,
-    });*/}
+    });
   };
 
 
