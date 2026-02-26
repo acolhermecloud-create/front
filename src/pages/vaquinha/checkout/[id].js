@@ -289,9 +289,16 @@ export default function CheckoutDonate() {
   }
 
   const handleGeneratePix = async () => {
+    
+    const valueInCents = Number.parseInt(valueOfDonation)
+
+    if(isNaN(valueInCents) || valueInCents < 1000) {
+      toast.warning("Valor mínimo de doação é de R$ 10,00")
+      return
+    }
+
     handleLoading()
 
-    const valueInCents = Number.parseInt(valueOfDonation)
     const trackingData = getTrackingData()
 
     // Track AddPaymentInfo when PIX is generated

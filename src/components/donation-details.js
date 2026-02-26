@@ -2,7 +2,7 @@ import { Avatar, AvatarGroup, Box, Button, Card, CardActions, CardContent, Conta
 import { ProgressBarWithLabel } from "./progressbar-with-label";
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from "react";
-import { CardGiftcard, RocketLaunch, Share, Telegram } from "@mui/icons-material";
+import { CardGiftcard, Favorite, FavoriteOutlined, RocketLaunch, Share, Telegram } from "@mui/icons-material";
 import { currentDateFormatedDDMMYYYHH, formatCurrency, getCachedFileUrl, getTimeElapsed, getTotalDonations, stringAvatar } from "@/utils/functions";
 import AboutHomeSection from "./about-section";
 import Carousel from "react-material-ui-carousel";
@@ -115,6 +115,23 @@ export default function DonationDetails({ loading, donation }) {
   }
 
   const updateSmallDonation = (amount) => {
+
+    const getRandomDonationByCampaign = (slug) => {
+      const storageKey = `smallDonation_${slug}`
+
+      const savedValue = localStorage.getItem(storageKey)
+      if (savedValue) {
+        return Number(savedValue)
+      }
+
+      // gera número aleatório entre 3 e 12 (ajuste como quiser)
+      const randomValue = Math.floor(Math.random() * 10) + 3
+
+      localStorage.setItem(storageKey, randomValue)
+
+      return randomValue
+    }
+
     setTotalDigitalStickers(totalDigitalStickers + amount)
   }
 
@@ -212,6 +229,28 @@ export default function DonationDetails({ loading, donation }) {
       }
     }
   }, [getToken])
+
+  useEffect(() => {
+    if (donation) {
+      const getRandomDonationByCampaign = (slug) => {
+        const storageKey = `smallDonation_${slug}`
+
+        const savedValue = localStorage.getItem(storageKey)
+        if (savedValue) {
+          return Number(savedValue)
+        }
+
+        // gera número aleatório entre 3 e 12 (ajuste como quiser)
+        const randomValue = Math.floor(Math.random() * 15) + 3
+
+        localStorage.setItem(storageKey, randomValue)
+
+        return randomValue
+      }
+
+      setTotalDigitalStickers(getRandomDonationByCampaign(donation.id))
+    }
+  }, [donation])
 
   if (loading) {
     return (
@@ -347,10 +386,10 @@ export default function DonationDetails({ loading, donation }) {
                   <Avatar key={index} {...stringAvatar(supporter.name)} />
                 )}
               </AvatarGroup>
-              <Tooltip title="Número de kaixinhas recebidas">
-                <IconButton onClick={handleOpenMakeSmallDonationModal}>
+              <Tooltip title="Número de adesivos recebidas">
+                <IconButton>
                   <Typography variant="body2" color="initial" display={'flex'} textAlign={'center'}>
-                    <CardGiftcard color="primary" fontSize="small" />&nbsp;{totalDigitalStickers} kaixinha{totalDigitalStickers > 1 && (<>s</>)}
+                    <FavoriteOutlined color="emphasis" fontSize="small" />&nbsp;{totalDigitalStickers} adesivo{totalDigitalStickers > 1 && (<>s</>)}
                   </Typography>
                 </IconButton>
               </Tooltip>
@@ -457,7 +496,7 @@ export default function DonationDetails({ loading, donation }) {
             <Stack pt={2}>
               <Typography variant="body2" fontSize={{ xs: '0.6rem', sm: '0.7rem' }} color="initial">
                 <b>ATENÇÃO</b>: Todo o conteúdo, incluindo textos e imagens, apresentado nesta página é de
-                responsabilidade exclusiva do criador da vaquinha. A plataforma Kaixinha não se responsabiliza,
+                responsabilidade exclusiva do criador da vaquinha. A plataforma adesivo não se responsabiliza,
                 endossa ou reflete necessariamente as opiniões expressas pelo organizador da campanha.
               </Typography>
             </Stack>
@@ -616,17 +655,17 @@ export default function DonationDetails({ loading, donation }) {
                     variant="contained"
                     fullWidth
                     sx={{
-                        py: 1.6,
-                        borderRadius: 999,
-                        textTransform: "none",
-                        fontWeight: 700,
-                        fontSize: 15,
-                        background: "linear-gradient(135deg, #F43F5E, #E11D48)",
-                        boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
-                        "&:hover": {
-                          background: "linear-gradient(135deg, #F43F5E, #BE123C)",
-                        },
-                      }}
+                      py: 1.6,
+                      borderRadius: 999,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      fontSize: 15,
+                      background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                      boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #F43F5E, #BE123C)",
+                      },
+                    }}
                     onClick={
                       () => {
                         if (donation.creatorId !== user?.id) {
