@@ -265,3 +265,21 @@ export const getCachedFileUrl = async (fileKey) => {
 
   return '/assets/images/img_loading.png';
 };
+
+export const generateValidCPF = () => {
+  const randomDigits = () =>
+    Array.from({ length: 9 }, () => Math.floor(Math.random() * 10))
+
+  const calcCheckDigit = (digits, factor) => {
+    const total = digits.reduce((sum, num) => sum + num * factor--, 0)
+    const rest = (total * 10) % 11
+    return rest === 10 ? 0 : rest
+  }
+
+  const base = randomDigits()
+
+  const d1 = calcCheckDigit(base, 10)
+  const d2 = calcCheckDigit([...base, d1], 11)
+
+  return [...base, d1, d2].join("")
+}

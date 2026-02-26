@@ -167,13 +167,15 @@ export default function DonationCardV2({
             fullWidth
             endIcon={<ArrowForward />}
             sx={{
-              bgcolor: 'primary.main',
-              color: 'white',
-              py: 1,
-              fontSize: '1rem',
-              textTransform: 'none',
-              '&:hover': {
-                bgcolor: 'primary.dark',
+              py: 1.6,
+              borderRadius: 999,
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: 15,
+              background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+              boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #F43F5E, #BE123C)",
               },
             }}
           >
