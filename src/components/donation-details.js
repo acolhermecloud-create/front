@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
 import { useLoginWarning } from "@/context/LoginWarningContext";
 import { useLoading } from "@/context/LoadingContext";
+import { useRouter } from "next/router";
 
 export default function DonationDetails({ loading, donation }) {
 
@@ -32,6 +33,8 @@ export default function DonationDetails({ loading, donation }) {
   const { handleLoading, handleCloseLoading } = useLoading();
 
   const [user, setUser] = useState();
+
+  const router = useRouter();
 
   // DADOS DA CAMPAINHA
   const [totalOfDonationsInBRL, setTotalOfDonationsInBRL] = useState(0);
@@ -90,12 +93,17 @@ export default function DonationDetails({ loading, donation }) {
   };
 
   const handleOpenMakeDonation = (campaign) => {
-    if (campaign.creatorId === user?.id) {
-      toast.error("Você não pode doar para si mesmo");
-      return;
-    }
 
-    handleOpenDefineValueOfDonation(campaign, images);
+    const payload = {
+      ...router.query, // Inclui todos os parâmetros da query atual
+      id: campaign.id,
+      slug: campaign.slug,
+      image: images[0]
+    };
+    router.push({
+      pathname: `/vaquinha/checkout/${campaign.slug}`,
+      query: payload,
+    });
   }
 
   const handleGetLogs = async (campaignId) => {
@@ -488,14 +496,15 @@ export default function DonationDetails({ loading, donation }) {
                       variant="contained"
                       fullWidth
                       sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        py: 1,
-                        my: 1,
-                        fontSize: '1rem',
-                        textTransform: 'none',
-                        '&:hover': {
-                          bgcolor: 'primary.dark',
+                        py: 1.6,
+                        borderRadius: 999,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                        boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #F43F5E, #BE123C)",
                         },
                       }}
                       onClick={
@@ -518,8 +527,12 @@ export default function DonationDetails({ loading, donation }) {
                       variant="outlined"
                       fullWidth
                       sx={{
-                        py: 1,
-                        my: 1,
+                        py: 1.6,
+                        borderRadius: 999,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        mt: 1,
                         backgroundColor: theme.palette.light.main,
                         color: theme.palette.dark.main,
                         borderColor: theme.palette.dark.text,
@@ -603,16 +616,17 @@ export default function DonationDetails({ loading, donation }) {
                     variant="contained"
                     fullWidth
                     sx={{
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      py: 1,
-                      my: 1,
-                      fontSize: '0.88rem',
-                      textTransform: 'none',
-                      '&:hover': {
-                        bgcolor: 'primary.dark',
-                      },
-                    }}
+                        py: 1.6,
+                        borderRadius: 999,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                        boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #F43F5E, #BE123C)",
+                        },
+                      }}
                     onClick={
                       () => {
                         if (donation.creatorId !== user?.id) {
