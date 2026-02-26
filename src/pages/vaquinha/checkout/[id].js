@@ -927,7 +927,7 @@ export default function CheckoutDonate() {
                 >
                   <Typography fontSize={14} fontWeight={500}>
                     Se aparecer alerta de "golpe" no aplicativo do banco, pode ignorar e
-                    prosseguir. Isso ocorre porque a conta da Todos Por África é nova e
+                    prosseguir. Isso ocorre porque a conta é nova e
                     está recebendo grande volume de doações.
                   </Typography>
                 </Box>
