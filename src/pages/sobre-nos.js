@@ -18,7 +18,7 @@ export default function AboutUs() {
           <Grid item xs={12} md={6} lg={6} display={'flex'} alignItems={'center'}>
             <InstitucionalVideo 
               height={315} 
-              thumbnail={'https://integras-public.s3.sa-east-1.amazonaws.com/thumb-Acolher.jpg'}/>
+              thumbnail={'https://i.ibb.co/NghQJqQZ/depositphotos-139023516-stock-photo-african-boy-in-shirt-smiling.webp'}/>
           </Grid>
           <Grid item xs={12} md={6} lg={6} spacing={2}>
             <Typography variant="overline" color="primary"
