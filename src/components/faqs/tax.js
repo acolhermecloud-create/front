@@ -8,7 +8,7 @@ export default function FaqTaxExplanation() {
       <Grid container spacing={6}>
         <Grid item xs={4} sm={4} sx={{ display: { xs: 'none', sm: 'block' } }}>
           <img
-            src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG7.png"
+            src="https://i.ibb.co/nMtQ6FKf/03qc059dh5.webp"
             style={{ maxWidth: '100%', borderRadius: 10 }}
           />
         </Grid>

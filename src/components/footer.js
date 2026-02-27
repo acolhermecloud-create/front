@@ -16,15 +16,15 @@ export default function Footer() {
           {/* Logo e CNPJ */}
           <Grid item xs={12} md={4} sx={{ textAlign: { xs: "center", md: "left" } }}>
             <img src={logo.src} alt="logo" width={180} />
-            <Typography variant="body2">CNPJ 57.707.122/0001-30</Typography>
+            <Typography variant="body2">CNPJ 63.555.258/0001-74</Typography>
           </Grid>
 
           {/* Endereço */}
           <Grid item xs={12} md={4} sx={{ textAlign: { xs: "center", md: "left" } }}>
             <Typography variant="h6" gutterBottom>Nosso endereço</Typography>
             <Typography variant="body2">
-              Av. Paulista<br />
-              São Paulo, Bela Vista/SP, CEP 01.311-927
+              R. Simão Álvares, 259<br />
+              Pinheiros, São Paulo - SP, 05417-030
             </Typography>
           </Grid>
 
@@ -96,16 +96,6 @@ export default function Footer() {
                 </Box>
               </Link>
             </Grid>*/}
-
-            <Grid item>
-              <Link
-                target="_blank"
-                href="https://api.whatsapp.com/send/?phone=5562995774022&text=Ol%C3%A1%2C+estou+com+d%C3%BAvida&type=phone_number&app_absent=0" passHref legacyBehavior>
-                <Box component="a" style={{ color: theme.palette.light.main, textDecoration: "none" }}>
-                  <Typography component="span" variant="subtitle2" color="inherit">Fale com o DPO</Typography>
-                </Box>
-              </Link>
-            </Grid>
           </Grid>
         </Grid>
 

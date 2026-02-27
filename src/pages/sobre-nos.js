@@ -96,7 +96,7 @@ export default function AboutUs() {
 
           </Grid>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG1.png"
+            <img src="https://i.ibb.co/GfHSTWXz/vecteezy-woman-working-on-computer-notebook-planner-3444482.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
         </Grid>
@@ -104,7 +104,7 @@ export default function AboutUs() {
         {/** DIVULGUE SUA Acolher */}
         <Grid container spacing={4} sx={{ pt: 6 }}>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/img2.png"
+            <img src="https://i.ibb.co/23yhMdH0/vecteezy-3d-colorful-megaphone-on-a-white-background-27292007.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
           <Grid item xs={12} md={6} lg={6} spacing={2} alignSelf={'center'}>
@@ -224,7 +224,7 @@ export default function AboutUs() {
 
           </Grid>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG3.png"
+            <img src="https://i.ibb.co/6RfgpS5W/closeup-diverse-people-joining-their-hands.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
         </Grid>
@@ -232,7 +232,7 @@ export default function AboutUs() {
         {/** DIVULGUE SUA Acolher */}
         <Grid container spacing={4} sx={{ pt: 6 }}>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG4.png"
+            <img src="https://i.ibb.co/8DKGc1Mn/excited-young-woman-hold-paper-letter-feel-euphoric-receiving-job-promotion-tax-refund-from-bank-hap.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
           <Grid item xs={12} md={6} lg={6} spacing={2} alignSelf={'center'}>
@@ -339,7 +339,7 @@ export default function AboutUs() {
 
           </Grid>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG5.png"
+            <img src="https://i.ibb.co/1tjZGQpR/image-cute-african-american-woman-saying-thank-you-smiling-press-hands-together.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
         </Grid>
@@ -347,7 +347,7 @@ export default function AboutUs() {
         {/** COMEMORAÇÃO */}
         <Grid container spacing={4} sx={{ pt: 6 }}>
           <Grid item xs={12} md={6} lg={6}>
-            <img src="https://integras-public.s3.sa-east-1.amazonaws.com/IMG6.png"
+            <img src="https://i.ibb.co/B5q7N1qz/menina-feliz-em-jaqueta-branca-soprando-confete-durante-uma-sessao-de-fotos-sobre-um-fundo-bege-2916.jpg"
               style={{ borderRadius: 15, maxWidth: '100%' }} />
           </Grid>
           <Grid item xs={12} md={6} lg={6} spacing={2} alignSelf={'center'}>
