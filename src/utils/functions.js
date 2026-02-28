@@ -228,34 +228,35 @@ export function centsToDecimal(cents, language = 'pt-BR', currency = 'BRL') {
   }).format(decimalF);
 }
 
-// 📦 localStorage cache com expiração
 export const getCachedFileUrl = async (fileKey) => {
-  const cacheKey = `image_cache_${fileKey}`;
+  const cacheKey = `images_cache_${fileKey}`;
   const cachedRaw = localStorage.getItem(cacheKey);
 
-  if (cachedRaw) {
+  if (cachedRaw && cachedRaw !== "undefined" && cachedRaw !== "null") {
     try {
       const cached = JSON.parse(cachedRaw);
       const now = Date.now();
 
-      if (now - cached.timestamp < EXPIRATION_MS) {
+      if (cached?.fileUrl && cached?.timestamp && now - cached.timestamp < EXPIRATION_MS) {
         return cached.fileUrl;
       } else {
-        localStorage.removeItem(cacheKey); // Expirado
+        localStorage.removeItem(cacheKey);
       }
     } catch {
-      localStorage.removeItem(cacheKey); // Corrupção
+      localStorage.removeItem(cacheKey);
     }
   }
 
   try {
     const response = await fetch(`/api/get-file?filekey=${fileKey}`);
     const data = await response.json();
+
     if (response.ok && data?.fileUrl) {
       const cacheValue = {
         fileUrl: data.fileUrl,
         timestamp: Date.now()
       };
+
       localStorage.setItem(cacheKey, JSON.stringify(cacheValue));
       return data.fileUrl;
     }

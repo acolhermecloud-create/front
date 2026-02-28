@@ -19,7 +19,7 @@ class S3Service {
     });
   }
 
-  async getUrlFileByKey(key, expiresSec = 24 * 60 * 60) {
+  async getUrlFileByKey(key, expiresSec = 180 * 24 * 60 * 60) {
     if (!key) throw new Error('A chave (key) do arquivo é obrigatória.');
 
     const params = {
@@ -34,6 +34,10 @@ class S3Service {
       console.error('Erro ao gerar URL pré-assinada:', error);
       throw new Error('Não foi possível gerar a URL pré-assinada.');
     }
+  }
+
+  async getPublicUrlFileByKey(key) {
+    return `${process.env.AWS_ENDPOINT}/${process.env.AWS_ACCESS_BUCKETNAME}/${key}`;
   }
 }
 
