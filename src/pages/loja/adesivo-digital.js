@@ -54,7 +54,7 @@ export default function BuyKaixinhas({ campaignId }) {
     handleLoading();
     const userIsLogged = await validateTokenWithOutRedirect();
     if (!userIsLogged) {
-      toast.error("Faça o login para comprar kaixinhas");
+      toast.error("Faça o login para comprar adesivos digitais!");
       location.href = "/login";
       return;
     }
@@ -145,13 +145,13 @@ export default function BuyKaixinhas({ campaignId }) {
       {!showPayment && !paymentConfirmed && (
         <Container maxWidth="lg" sx={{ pt: 4, pb: 6 }}>
           <Typography variant="body2" color="initial">
-            Adquirir corações
+            Adquirir adesivos digitais!
           </Typography>
           <Typography variant="h6" color="initial">
-            Turbine sua corações agora mesmo e arrecade mais ainda!
+            Turbine sua campanha agora mesmo e arrecade mais ainda!
           </Typography>
           <Typography mt={2} variant="subtitle1" color="initial">
-            Escolha um pacote de corações e amplie as chances da sua campanha se destacar entre as mais queridas.
+            Escolha um pacote de adesivos digitais e amplie as chances da sua campanha se destacar entre as mais queridas.
           </Typography>
           <Typography mt={4} variant="body2" fontWeight={800} color="initial">
             As vaquinhas mais populares ganham destaque especial no site, redes sociais e comunicações da nossa plataforma.

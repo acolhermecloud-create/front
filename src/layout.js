@@ -12,7 +12,7 @@ const RootLayout = ({ children }) => {
       <ThemeProvider theme={theme}>
         <Head>
           <title>Acolher</title>
-          <meta name="description" content="Transformamos solidariedade em ação 🧡, Doe, crie campanhas e conecte corações!" />
+          <meta name="description" content="Transformamos solidariedade em ação, Doe, crie campanhas e conecte corações!" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 

@@ -45,7 +45,7 @@ export default function CampaignStepperTwo({
       <Stack mt={1} sx={{ maxWidth: 380 }}>
         <FormControl>
           <FormLabel id="demo-radio-buttons-group-label">
-            <Typography mt={1} variant="h5" color="primary">Essa kaixinha é para ajudar quem?</Typography>
+            <Typography mt={1} variant="h5" color="primary">Essa Campanha é para ajudar quem?</Typography>
           </FormLabel>
           <RadioGroup
             aria-labelledby="demo-radio-buttons-group-label"

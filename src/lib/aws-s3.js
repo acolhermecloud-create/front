@@ -2,27 +2,30 @@ import AWS from 'aws-sdk';
 
 class S3Service {
   constructor() {
+    const isCustomEndpoint = !!process.env.AWS_ENDPOINT;
+
     this.s3 = new AWS.S3({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION,
+
+      // MinIO não precisa de region real
+      region: process.env.AWS_REGION || 'us-east-1',
+
+      signatureVersion: 'v4',
+
+      // 👇 ESSENCIAL para MinIO
+      endpoint: isCustomEndpoint ? new AWS.Endpoint(process.env.AWS_ENDPOINT) : undefined,
+      s3ForcePathStyle: true, // obrigatório para MinIO
     });
   }
 
-  /**
-   * Obtém a URL pré-assinada para um arquivo no S3
-   * @param {string} key - Caminho do arquivo no bucket
-   * @returns {Promise<string>} - URL válida por 24 horas
-   */
-  async getUrlFileByKey(key) {
-    if (!key) {
-      throw new Error('A chave (key) do arquivo é obrigatória.');
-    }
+  async getUrlFileByKey(key, expiresSec = 180 * 24 * 60 * 60) {
+    if (!key) throw new Error('A chave (key) do arquivo é obrigatória.');
 
     const params = {
       Bucket: process.env.AWS_ACCESS_BUCKETNAME,
       Key: key,
-      Expires: 24 * 60 * 60, // 24 horas
+      Expires: expiresSec,
     };
 
     try {
@@ -31,6 +34,10 @@ class S3Service {
       console.error('Erro ao gerar URL pré-assinada:', error);
       throw new Error('Não foi possível gerar a URL pré-assinada.');
     }
+  }
+
+  async getPublicUrlFileByKey(key) {
+    return `${process.env.AWS_ENDPOINT}/${process.env.AWS_ACCESS_BUCKETNAME}/${key}`;
   }
 }
 

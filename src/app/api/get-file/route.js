@@ -6,6 +6,6 @@ export async function GET(req) {
   const url = new URL(req.url);
   const filekey = url.searchParams.get('filekey');
 
-  const fileUrl = await S3Service.getUrlFileByKey(filekey);
+  const fileUrl = await S3Service.getPublicUrlFileByKey(filekey);
   return NextResponse.json({ fileUrl }, { status: 200 });
 }

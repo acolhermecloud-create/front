@@ -282,7 +282,7 @@ export default function MyAccountBalance({ campaigns,
             id="panel2-header"
           >
             <Typography variant="subtitle2" color="initial">
-              Extrato de Kaixinhas Adquiridas
+              Extrato de Campanhas Adquiridas
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -315,7 +315,7 @@ export default function MyAccountBalance({ campaigns,
               </TableContainer>
             ) : (
               <Typography variant="body2" color="textSecondary" textAlign={'center'}>
-                Nenhuma kaixinhas adquirida
+                Nenhuma campanha adquirida
               </Typography>
             )}
           </AccordionDetails>

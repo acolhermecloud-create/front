@@ -9,7 +9,7 @@ export default function PolicyPrivacy() {
       </Typography>
 
       <Typography variant="body1" paragraph>
-        A sua privacidade é importante para nós. É política do Kaixinha respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site Kaixinha, e outros sites que possuímos e operamos.
+        A sua privacidade é importante para nós. É política do Acolher respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site Acolher, e outros sites que possuímos e operamos.
       </Typography>
 
       <Typography variant="h5" gutterBottom>
@@ -85,7 +85,7 @@ export default function PolicyPrivacy() {
         Compromisso do Usuário
       </Typography>
       <Typography variant="body1" paragraph>
-        O usuário se compromete a fazer uso adequado dos conteúdos e da informação que o Kaixinha oferece no site e com caráter enunciativo, mas não limitativo:
+        O usuário se compromete a fazer uso adequado dos conteúdos e da informação que o Acolher oferece no site e com caráter enunciativo, mas não limitativo:
       </Typography>
       <Box component="ul" sx={{ pl: 4 }}>
         <Typography variant="body1" component="li" paragraph>
@@ -95,7 +95,7 @@ export default function PolicyPrivacy() {
           B. Não difundir propaganda ou conteúdo de natureza racista, xenofóbica, pixbet ou azar, qualquer tipo de pornografia ilegal, de apologia ao terrorismo ou contra os direitos humanos;
         </Typography>
         <Typography variant="body1" component="li" paragraph>
-          C. Não causar danos aos sistemas físicos (hardwares) e lógicos (softwares) do Kaixinha, de seus fornecedores ou terceiros, para introduzir ou disseminar vírus informáticos ou quaisquer outros sistemas de hardware ou software que sejam capazes de causar danos anteriormente mencionados.
+          C. Não causar danos aos sistemas físicos (hardwares) e lógicos (softwares) do Acolher, de seus fornecedores ou terceiros, para introduzir ou disseminar vírus informáticos ou quaisquer outros sistemas de hardware ou software que sejam capazes de causar danos anteriormente mencionados.
         </Typography>
       </Box>
 

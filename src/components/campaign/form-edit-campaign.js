@@ -169,7 +169,7 @@ export const EditCampaign = ({ handleUpdateImagesOfCampaign, campaign }) => {
             size="small"
             sx={{ mt: 2 }}
             id="outlined-basic"
-            label="Titulo da sua kaixinha"
+            label="Titulo da sua Campanha"
             variant="outlined"
             value={title}
             onChange={(e) => setTitle(e.target.value)}

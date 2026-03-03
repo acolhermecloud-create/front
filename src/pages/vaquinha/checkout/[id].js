@@ -22,9 +22,15 @@ import {
   InputAdornment,
   FormHelperText,
   useMediaQuery,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material"
-import { ExpandMore, CheckCircle, Pix, QrCode, ContentCopy, Receipt, PhoneAndroid } from "@mui/icons-material"
-import { formatCurrency, truncateText, validateCNPJ, validateCPF, validateEmail } from "@/utils/functions"
+import { ExpandMore, CheckCircle, Pix, QrCode, ContentCopy, Receipt, PhoneAndroid, WarningAmber } from "@mui/icons-material"
+import { formatCurrency, generateValidCPF, truncateText, validateCNPJ, validateCPF, validateEmail } from "@/utils/functions"
 import { useCampaign } from "@/context/CampaignContext"
 import { useLoading } from "@/context/LoadingContext"
 import { useRouter } from "next/router"
@@ -36,11 +42,14 @@ import { useTheme } from "@mui/material/styles"
 import { useAuth } from "@/context/AuthContext"
 import usePixelEvent from "@/hooks/usePixelEvent"
 import useFacebookPixelApi from "@/hooks/useFacebookPixelApi"
+import useGoogleAnalytics from "@/hooks/useGoogleAnalytics"
+import { useUtm } from "@/hooks/useUtm"
 
 export default function CheckoutDonate() {
   const router = useRouter()
-  const { id, value, image, utm_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, sub1 } =
-    router.query
+  const { id, image } = router.query
+
+  const utm = useUtm()
 
   const isMounted = useRef(true)
   const { handleGetCampaignBySlug, handleGeneratePaymentViaPIX, checkPaymentDonation, handleRecordUtm } = useCampaign()
@@ -57,12 +66,15 @@ export default function CheckoutDonate() {
     trackLead,
   } = useFacebookPixelApi()
 
+  const ga = useGoogleAnalytics()
+
   const [expanded, setExpanded] = useState("panel1")
 
   // Estados para os campos do formulário
+  const value = "3000"
   const [campaign, setCampaign] = useState(null)
-  const [valueOfDonation, setValueOfDonation] = useState("0")
-  const [newValue, setNewValue] = useState("0")
+  const [valueOfDonation, setValueOfDonation] = useState("3000")
+  const [newValue, setNewValue] = useState("3000")
   const [openModal, setOpenModal] = useState(false)
   const [fillContact, setFillContact] = useState(false)
   const [fillPayment, setFillPayment] = useState(false)
@@ -70,6 +82,8 @@ export default function CheckoutDonate() {
   const [selectedMethod, setSelectedMethod] = useState("Pix")
   const [donateAsCompany, setDonateAsCompany] = useState(false)
   const [anonymousDonation, setAnonymousDonation] = useState(false)
+
+  const [securityModalOpen, setSecurityModalOpen] = useState(false)
 
   // Estados para os campos de contato
   const [name, setName] = useState("")
@@ -87,6 +101,9 @@ export default function CheckoutDonate() {
 
   // Validação básica
   const [errors, setErrors] = useState({})
+  const [leadSent, setLeadSent] = useState(false)
+
+  const [pixGenerated, setPixGenerated] = useState(false)
 
   const paymentMethods = [
     { icon: <Pix />, label: "Pix" },
@@ -99,28 +116,47 @@ export default function CheckoutDonate() {
     const [firstName, ...lastNameParts] = name.split(" ")
     const lastName = lastNameParts.join(" ")
 
+    const valueNumber = Number.parseFloat(
+      (Number.parseInt(valueOfDonation || "0") / 100).toFixed(2),
+    )
+
     return {
       email: email || "",
       phone: phone || "",
       firstName: firstName || "",
       lastName: lastName || "",
-      value: Number.parseFloat((Number.parseInt(valueOfDonation) / 100).toFixed(2)),
+      value: valueNumber,
       currency: "BRL",
+
       contentName: campaign?.title || "",
       contentCategory: "donation",
       contentIds: [campaign?.id?.toString() || id?.toString() || ""],
+
       eventId: `${campaign?.slug || id}_${Date.now()}`,
       externalId: loggedUser?.id || null,
       country: "br",
-      // UTM parameters
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_term,
-      utm_content,
-      utm_id,
-      fbclid,
-      sub1,
+
+      // 🔥 UTMs (Google, Meta, orgânico, afiliado)
+      utm_source: utm.utm_source || "",
+      utm_medium: utm.utm_medium || "",
+      utm_campaign: utm.utm_campaign || "",
+      utm_term: utm.utm_term || "",
+      utm_content: utm.utm_content || "",
+      utm_id: utm.utm_id || "",
+
+      // 🔥 Click IDs separados
+      fbclid: utm.fbclid || "",
+      gclid: utm.gclid || "",
+
+      // 🔥 Identificador de afiliado / fallback
+      sub1: utm.sub1 || utm.fbclid || utm.gclid || "",
+
+      // 🔥 Fonte de tráfego detectada (útil pra backend / BI)
+      traffic_source: utm.fbclid
+        ? "meta_ads"
+        : utm.gclid
+          ? "google_ads"
+          : utm.utm_source || "direct",
     }
   }
 
@@ -138,6 +174,31 @@ export default function CheckoutDonate() {
           await trackLead({
             ...trackingData,
             eventId: `lead_${campaign?.slug || id}_${Date.now()}`,
+          })
+
+          ga.trackBeginCheckout({
+            value: trackingData.value,
+            currency: "BRL",
+
+            utm_source: trackingData.utm_source,
+            utm_medium: trackingData.utm_medium,
+            utm_campaign: trackingData.utm_campaign,
+            utm_term: trackingData.utm_term,
+            utm_content: trackingData.utm_content,
+
+            gclid: trackingData.gclid,
+          })
+          ga.trackGenerateLead({
+            value: trackingData.value,
+            currency: "BRL",
+
+            utm_source: trackingData.utm_source,
+            utm_medium: trackingData.utm_medium,
+            utm_campaign: trackingData.utm_campaign,
+            utm_term: trackingData.utm_term,
+            utm_content: trackingData.utm_content,
+
+            gclid: trackingData.gclid,
           })
         }
       }
@@ -228,15 +289,35 @@ export default function CheckoutDonate() {
   }
 
   const handleGeneratePix = async () => {
+    
+    const valueInCents = Number.parseInt(valueOfDonation)
+
+    if(isNaN(valueInCents) || valueInCents < 1000) {
+      toast.warning("Valor mínimo de doação é de R$ 10,00")
+      return
+    }
+
     handleLoading()
 
-    const valueInCents = Number.parseInt(valueOfDonation)
     const trackingData = getTrackingData()
 
     // Track AddPaymentInfo when PIX is generated
     await trackAddPaymentInfo({
       ...trackingData,
       eventId: `payment_info_${campaign?.slug || id}_${Date.now()}`,
+    })
+
+    ga.trackBeginCheckout({
+      value: trackingData.value,
+      currency: "BRL",
+
+      utm_source: trackingData.utm_source,
+      utm_medium: trackingData.utm_medium,
+      utm_campaign: trackingData.utm_campaign,
+      utm_term: trackingData.utm_term,
+      utm_content: trackingData.utm_content,
+
+      gclid: trackingData.gclid,
     })
 
     const response = await handleGeneratePaymentViaPIX(
@@ -252,11 +333,17 @@ export default function CheckoutDonate() {
       setQrCodeImage(response.data.qRCode)
       setQrCode(response.data.code)
       setTransactionId(response.data.id)
-      setExpanded("panel3")
+      setPixGenerated(true)
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      })
+      setSecurityModalOpen(true)
 
       await sendUtmfyData(
         response.data.id,
         "waiting_payment",
+        trackingData,
         name,
         email,
         phone,
@@ -272,6 +359,12 @@ export default function CheckoutDonate() {
       await sendEventToFacebook("GenerateLead", {
         ...trackingData,
         eventId: `pix_generated_${campaign?.slug || id}_${Date.now()}`,
+      })
+
+      // Google Analytics - add_payment_info
+      ga.trackAddPaymentInfo({
+        value: trackingData.value,
+        paymentType: "pix",
       })
     } else {
       toast.warning(response?.data?.message ?? "Verifique o valor digitado!")
@@ -290,6 +383,8 @@ export default function CheckoutDonate() {
         setPaymentConfirmed(true)
 
         const trackingData = getTrackingData()
+
+        sendLead(trackingData)
 
         // Track Purchase with comprehensive data
         const purchaseData = {
@@ -326,6 +421,29 @@ export default function CheckoutDonate() {
           ...trackingData,
           eventId: `conversion_${transactionId}_${Date.now()}`,
         })
+
+        // Google Analytics - purchase com UTMs
+        ga.trackPurchase({
+          transactionId: transactionId,
+          value: trackingData.value,
+          currency: "BRL",
+          items: [
+            {
+              item_id: trackingData.contentIds[0],
+              item_name: trackingData.contentName,
+              price: trackingData.value,
+              quantity: 1,
+            },
+          ],
+
+          utm_source: trackingData.utm_source,
+          utm_medium: trackingData.utm_medium,
+          utm_campaign: trackingData.utm_campaign,
+          utm_term: trackingData.utm_term,
+          utm_content: trackingData.utm_content,
+
+          gclid: trackingData.gclid,
+        })
       }
     }
   }
@@ -333,6 +451,7 @@ export default function CheckoutDonate() {
   const sendUtmfyData = async (
     orderId,
     status,
+    trackingData,
     customerName,
     customerEmail,
     customerPhone,
@@ -346,7 +465,10 @@ export default function CheckoutDonate() {
     const payload = {
       orderId,
       status,
-      approvedDat: status === "paid" ? new Date().toISOString().slice(0, 19).replace("T", " ") : null,
+      approvedDat:
+        status === "paid"
+          ? new Date().toISOString().slice(0, 19).replace("T", " ")
+          : null,
       customer: {
         name: customerName,
         email: customerEmail,
@@ -364,14 +486,15 @@ export default function CheckoutDonate() {
         },
       ],
       trackingParameters: {
-        utmSource: utm_source,
-        utmCampaign: utm_campaign,
-        utmMedium: utm_medium,
-        utmContent: utm_content,
-        utmTerm: utm_term,
-        utmId: utm_id,
-        fbclid: fbclid,
-        sub1: sub1,
+        utmSource: trackingData.utm_source,
+        utmMedium: trackingData.utm_medium,
+        utmCampaign: trackingData.utm_campaign,
+        utmContent: trackingData.utm_content,
+        utmTerm: trackingData.utm_term,
+        utmId: trackingData.utm_id,
+        fbclid: trackingData.fbclid,
+        gclid: trackingData.gclid,
+        sub1: trackingData.sub1,
       },
       commission: {
         totalPriceInCents: productPrice,
@@ -380,9 +503,33 @@ export default function CheckoutDonate() {
       },
     }
 
-    const data = await handleRecordUtm(payload)
-    console.log("✅🔥 utmfy", data)
+    try {
+      console.group("📡 UTMFY SEND")
+      console.log("🧾 orderId:", orderId)
+      console.log("🏷️ UTMs:", payload.trackingParameters)
+      console.log("📤 payload:", payload)
+
+      const response = await handleRecordUtm(payload)
+
+      console.log("✅ RESPONSE:", response)
+      console.groupEnd()
+    } catch (error) {
+      console.group("❌ UTMFY ERROR")
+      console.error("orderId:", orderId)
+      console.error("erro:", error)
+      console.groupEnd()
+    }
   }
+
+  const generateRandomDigits = (length) =>
+    Array.from({ length }, () => Math.floor(Math.random() * 10)).join("")
+
+  const generateFakeEmail = () =>
+    `doacao${Date.now()}@gmail.com`
+
+  const generateFakeCPF = () => generateValidCPF(11)
+
+  const generateFakePhone = () => `55${generateRandomDigits(11)}`
 
   useEffect(() => {
     validateTokenWithOutRedirect().then(() => {
@@ -398,18 +545,33 @@ export default function CheckoutDonate() {
   }, [getToken])
 
   useEffect(() => {
-    if (isMounted.current && id && value) {
+    if (isMounted.current && id) {
       isMounted.current = false
+
+      setEmail(generateFakeEmail())
+      setDocument(generateFakeCPF())
+      setPhone(generateFakePhone())
+
       getCampaignDetails(id)
-      setValueOfDonation(value)
+      setValueOfDonation(value.toString())
 
       // Track page view on initial load
+      const trackingData = getTrackingData()
+
       trackPageView({
-        value: Number.parseFloat((Number.parseInt(value) / 100).toFixed(2)),
+        value: Number.parseInt(value) / 100,
         currency: "BRL",
-        contentName: id,
+        contentName: trackingData.contentName,
         contentCategory: "donation",
-        eventId: `pageview_${id}_${Date.now()}`,
+        eventId: `pageview_${trackingData.contentIds[0]}_${Date.now()}`,
+
+        utm_source: trackingData.utm_source,
+        utm_medium: trackingData.utm_medium,
+        utm_campaign: trackingData.utm_campaign,
+        utm_term: trackingData.utm_term,
+        utm_content: trackingData.utm_content,
+
+        gclid: trackingData.gclid,
       })
     }
   }, [id, value])
@@ -432,48 +594,32 @@ export default function CheckoutDonate() {
     }
   }, [transactionId, paymentConfirmed]) // Dependências importantes
 
-  const validateForm = () => {
-    const newErrors = {}
-    if (!name) newErrors.name = "Nome é obrigatório"
-    if (!email || !validateEmail(email)) newErrors.email = "E-mail válido é obrigatório"
+  const sendLead = async (trackingData) => {
 
-    if (!document || document === "") {
-      newErrors.document = "CPF/CNPJ é obrigatório"
-    }
+    const baseEventId = `${campaign?.slug || id}_${Date.now()}`
 
-    if (document.replace(/\D/g, "").length === 11) {
-      if (!validateCPF(document.replace(/\D/g, ""))) {
-        newErrors.document = "CPF/CNPJ é obrigatório"
-      }
-    } else if (document.replace(/\D/g, "").length === 14) {
-      if (!validateCNPJ(document.replace(/\D/g, ""))) {
-        newErrors.document = "CPF/CNPJ é obrigatório"
-      }
-    } else {
-      newErrors.document = "CPF/CNPJ é obrigatório"
-    }
+    await sendEventToFacebook("CompleteRegistration", {
+      ...trackingData,
+      eventId: `contact_complete_${baseEventId}`,
+    })
 
-    if (!phone || !isValidPhoneNumber(phone)) newErrors.phone = "Telefone válido é obrigatório"
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    await sendEventToFacebook("Lead", {
+      ...trackingData,
+      eventId: `lead_${baseEventId}`,
+    })
 
-  const handleSaveContact = async () => {
-    const validateFormData = validateForm()
-    if (validateFormData) {
-      setFillContact(true)
+    ga.trackGenerateLead({
+      value: trackingData.value,
+      currency: "BRL",
+      utm_source: trackingData.utm_source,
+      utm_medium: trackingData.utm_medium,
+      utm_campaign: trackingData.utm_campaign,
+      utm_term: trackingData.utm_term,
+      utm_content: trackingData.utm_content,
+      gclid: trackingData.gclid
+    })
 
-      // Track contact completion only if we have sufficient data
-      const trackingData = getTrackingData()
-      if (trackingData.email || trackingData.phone) {
-        await sendEventToFacebook("CompleteRegistration", {
-          ...trackingData,
-          eventId: `contact_complete_${campaign?.slug || id}_${Date.now()}`,
-        })
-      }
-
-      handleChangePanel("panel2")(null, true)
-    }
+    setLeadSent(true)
   }
 
   if (loading || !campaign) {
@@ -485,7 +631,7 @@ export default function CheckoutDonate() {
       <Box
         sx={{
           py: 3,
-          px: 0.5,
+          px: 1.5,
           maxWidth: 1200,
           overflowY: "auto",
           mx: "auto",
@@ -498,60 +644,470 @@ export default function CheckoutDonate() {
           <Typography color="text.primary">Checkout</Typography>
         </Breadcrumbs>
 
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
-            <Typography variant="h4" fontWeight={600} sx={{ mb: 4 }}>
-              Finalizar Pagamento
+        {!pixGenerated && (
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={8}>
+              <Typography variant="h4" fontWeight={600} sx={{ mb: 3 }}>
+                Checkout da Doação
+              </Typography>
+
+              <Paper sx={{
+                py: 3,
+                px: 1,
+                mb: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "grey.200",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                backgroundColor: "#fff",
+              }}>
+                <Typography variant="h6" sx={{ mb: 2 }} fontWeight={600}>
+                  Escolha um valor
+                </Typography>
+
+                {/* Botões pré-selecionados */}
+                <Stack
+                  direction="row"
+                  spacing={0.1}
+                  sx={{ mb: 2, flexWrap: "wrap", gap: 0.5 }}
+                >
+                  {[1000, 3000, 5000, 10000, 20000].map((v) => {
+                    const isActive = valueOfDonation === String(v)
+
+                    return (
+                      <Button
+                        key={v}
+                        onClick={() => setValueOfDonation(String(v))}
+                        sx={{
+                          borderRadius: 999,
+                          px: 2.5,
+                          py: 1,
+                          fontWeight: 600,
+                          fontSize: 14,
+                          textTransform: "none",
+                          minWidth: 0,
+
+                          backgroundColor: isActive ? "#F43F5E" : "#F9FAFB",
+                          color: isActive ? "#fff" : "#374151",
+                          border: "1px solid",
+                          borderColor: isActive ? "#F43F5E" : "#E5E7EB",
+                          boxShadow: isActive
+                            ? "0 4px 12px rgba(244,63,94,0.35)"
+                            : "none",
+
+                          "&:hover": {
+                            backgroundColor: isActive ? "#E11D48" : "#F3F4F6",
+                            borderColor: isActive ? "#E11D48" : "#D1D5DB",
+                          },
+                        }}
+                      >
+                        {formatCurrency(String(v))}
+                      </Button>
+                    )
+                  })}
+                </Stack>
+
+                {/* Input valor */}
+                <TextField
+                  fullWidth
+                  label="Outro valor"
+                  value={formatCurrency(valueOfDonation)}
+                  onChange={(e) =>
+                    setValueOfDonation(e.target.value.replace(/\D/g, ""))
+                  }
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">R$</InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backgroundColor: "#F9FAFB",
+                      "& fieldset": {
+                        borderColor: "#E5E7EB",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#D1D5DB",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#F43F5E",
+                        borderWidth: 1,
+                      },
+                    },
+                  }}
+                />
+              </Paper>
+
+              {/* Form de contato */}
+              <Paper sx={{
+                p: 3,
+                mb: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "grey.200",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                backgroundColor: "#fff",
+              }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Contato
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Nome"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      error={!!errors.name}
+                      helperText={errors.name}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 3,
+                          backgroundColor: "#F9FAFB",
+                          "& fieldset": {
+                            borderColor: "#E5E7EB",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#D1D5DB",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#F43F5E",
+                            borderWidth: 1,
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  {/*<Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="E-mail"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      error={!!errors.email}
+                      helperText={errors.email}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="CPF/CNPJ"
+                      value={document}
+                      onChange={(e) => setDocument(e.target.value)}
+                      error={!!errors.document}
+                      helperText={errors.document}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <PhoneInput
+                      defaultCountry="BR"
+                      value={phone}
+                      onChange={setPhone}
+                      style={{ width: "100%" }}
+                    />
+                    {!!errors.phone && (
+                      <FormHelperText>{errors.phone}</FormHelperText>
+                    )}
+                  </Grid>
+                  */}
+                </Grid>
+              </Paper>
+
+              {/* Botão gerar PIX */}
+              <Button
+                fullWidth
+                size="large"
+                variant="contained"
+                onClick={async () => {
+                  await handleGeneratePix()
+                }}
+                sx={{
+                  py: 1.8,
+                  borderRadius: 999,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  fontSize: 16,
+                  background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                  boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                  transition: "all .2s ease",
+
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #F43F5E, #BE123C)",
+                    boxShadow: "0 6px 20px rgba(244,63,94,0.45)",
+                    transform: "translateY(-1px)",
+                  },
+
+                  "&:active": {
+                    transform: "translateY(0)",
+                    boxShadow: "0 3px 10px rgba(244,63,94,0.35)",
+                  },
+
+                  "&.Mui-disabled": {
+                    background: "#E5E7EB",
+                    color: "#9CA3AF",
+                    boxShadow: "none",
+                  },
+                }}
+              >
+                Gerar Pix
+              </Button>
+            </Grid>
+
+            {/* Resumo lateral permanece */}
+            <Grid item xs={12} md={4}>
+              <SummarySection
+                campaign={campaign}
+                image={image}
+                valueOfDonation={valueOfDonation}
+                handleOpenModal={() => { }}
+              />
+            </Grid>
+          </Grid>
+        )}
+
+        {!paymentConfirmed && pixGenerated && qrCodeImage && (
+          <Stack spacing={3} sx={{ mt: 3 }}>
+            {/* CARD AVISO */}
+            <Dialog
+              open={securityModalOpen}
+              maxWidth="xs"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  borderRadius: 4,
+                  p: 1,
+                  textAlign: "center",
+                },
+              }}
+            >
+              <DialogContent sx={{ pt: 3 }}>
+                <Box
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: "50%",
+                    backgroundColor: "#FEF2F2",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mx: "auto",
+                    mb: 2,
+                  }}
+                >
+                  <WarningAmber sx={{ color: "#F43F5E", fontSize: 40 }} />
+                </Box>
+
+                <Typography variant="h6" fontWeight={800} mb={1}>
+                  ÚLTIMO AVISO
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    mb: 2,
+                  }}
+                >
+                  É seguro continuar com o pagamento.
+                </Typography>
+
+                <Box
+                  sx={{
+                    backgroundColor: "#FEF2F2",
+                    border: "1px solid #FECACA",
+                    borderRadius: 3,
+                    p: 2,
+                    textAlign: "justify",
+                  }}
+                >
+                  <Typography fontSize={14} fontWeight={500}>
+                    Se aparecer alerta de "golpe" no aplicativo do banco, pode ignorar e
+                    prosseguir. Isso ocorre porque a conta é nova e
+                    está recebendo grande volume de doações.
+                  </Typography>
+                </Box>
+              </DialogContent>
+
+              <DialogActions sx={{ px: 3, pb: 3 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => setSecurityModalOpen(false)}
+                  sx={{
+                    py: 1.6,
+                    borderRadius: 999,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    fontSize: 15,
+                    background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                    boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #F43F5E, #BE123C)",
+                    },
+                  }}
+                >
+                  Entendi, continuar
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* CARD COPIA E COLA */}
+            <Card elevation={6} sx={{
+              p: 3,
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "grey.200",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              backgroundColor: "#fff",
+            }}>
+              <Typography fontWeight={600} sx={{ mb: 1 }}>
+                Copie o código Pix
+              </Typography>
+
+              <TextField
+                fullWidth
+                value={qrCode}
+                InputProps={{
+                  readOnly: true,
+                  disabled: true,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          navigator.clipboard.writeText(qrCode)
+                          toast.success("Copiado")
+                        }}
+                        sx={{
+                          py: 0.8,
+                          borderRadius: 999,
+                          textTransform: "none",
+                          fontWeight: 700,
+                          fontSize: 16,
+                          background: "linear-gradient(135deg, #F43F5E, #E11D48)",
+                          boxShadow: "0 4px 14px rgba(244,63,94,0.35)",
+                          transition: "all .2s ease",
+
+                          "&:hover": {
+                            background: "linear-gradient(135deg, #F43F5E, #BE123C)",
+                            boxShadow: "0 6px 20px rgba(244,63,94,0.45)",
+                            transform: "translateY(-1px)",
+                          },
+
+                          "&:active": {
+                            transform: "translateY(0)",
+                            boxShadow: "0 3px 10px rgba(244,63,94,0.35)",
+                          },
+
+                          "&.Mui-disabled": {
+                            background: "#E5E7EB",
+                            color: "#9CA3AF",
+                            boxShadow: "none",
+                          },
+                        }}
+                      >
+                        Copiar
+                      </Button>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Card>
+
+            {/* CARD QR CODE */}
+            <Card elevation={6} sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                ou escaneie o QR Code
+              </Typography>
+
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Escaneie o QR Code no app do seu banco
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mb: 2,
+                }}
+              >
+                <img
+                  src={`data:image/png;base64,${qrCodeImage}`}
+                  style={{ maxWidth: 220 }}
+                />
+              </Box>
+
+              <Typography variant="caption" color="text.secondary">
+                Após o pagamento, a confirmação é automática
+              </Typography>
+            </Card>
+          </Stack>
+        )}
+
+        {paymentConfirmed && (
+          <Card
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "grey.200",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              textAlign: "center",
+            }}
+          >
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                backgroundColor: "#ECFDF5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mx: "auto",
+                mb: 2,
+              }}
+            >
+              <CheckCircle sx={{ color: "#10B981", fontSize: 40 }} />
+            </Box>
+
+            <Typography variant="h5" fontWeight={700} mb={1}>
+              Pagamento confirmado!
             </Typography>
 
-            <ContactForm
-              name={name}
-              setName={setName}
-              email={email}
-              setEmail={setEmail}
-              document={document}
-              setDocument={setDocument}
-              phone={phone}
-              setPhone={setPhone}
-              donateAsCompany={donateAsCompany}
-              setDonateAsCompany={setDonateAsCompany}
-              anonymousDonation={anonymousDonation}
-              setAnonymousDonation={setAnonymousDonation}
-              errors={errors}
-              fillContact={fillContact}
-              handleSaveContact={handleSaveContact}
-              expanded={expanded}
-              handleChange={handleChangePanel}
-            />
+            <Typography variant="body1" color="text.secondary" mb={3}>
+              Sua doação foi recebida com sucesso. Muito obrigado pelo seu apoio 💚
+            </Typography>
 
-            <PaymentForm
-              fillPayment={fillPayment}
-              selectedMethod={selectedMethod}
-              setSelectedMethod={setSelectedMethod}
-              paymentMethods={paymentMethods}
-              expanded={expanded}
-              handleChange={handleChangePanel}
-            />
+            <Divider sx={{ mb: 3 }} />
 
-            <PaymentPixData
-              qrCodeImage={qrCodeImage}
-              qrCode={qrCode}
-              fillPaymentMethod={fillPaymentMethod}
-              paymentConfirmed={paymentConfirmed}
-              expanded={expanded}
-              handleChange={handleChangePanel}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <SummarySection
-              campaign={campaign}
-              image={image}
-              valueOfDonation={valueOfDonation}
-              handleOpenModal={handleOpenModal}
-            />
-          </Grid>
-        </Grid>
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 3,
+                py: 1.6,
+                borderRadius: 999,
+                textTransform: "none",
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #10B981, #059669)",
+                boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #10B981, #047857)",
+                },
+              }}
+              onClick={() => window.location.reload()}
+            >
+              Fazer nova doação
+            </Button>
+          </Card>
+        )}
       </Box>
 
       <ValueChangeModal
@@ -1012,33 +1568,23 @@ function SummarySection({ campaign, image, valueOfDonation, handleOpenModal }) {
         <ExpandMore />
       </Box>
 
-      <Card sx={{ mb: 3 }}>
-        <CardMedia component="img" height="140" image={image} alt="Campaign image" style={{ objectFit: "contain" }} />
-        <CardContent>
-          <Typography variant="body2" gutterBottom>
-            {truncateText(campaign.title, 100)}
-          </Typography>
-        </CardContent>
-      </Card>
+      <Box sx={{ mb: 3, textAlign: "center" }}>
+        <Box
+          component="img"
+          src={image}
+          alt="Campaign image"
+          sx={{
+            width: "100%",
+            maxHeight: 160,
+            objectFit: "contain",
+            borderRadius: 2,
+          }}
+        />
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <Typography variant="h6">Valor:</Typography>
-        <Typography variant="h6">R$ {formatCurrency(valueOfDonation)}</Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          {truncateText(campaign.title, 100)}
+        </Typography>
       </Box>
-
-      <Button
-        variant="outlined"
-        fullWidth
-        sx={{
-          borderColor: "primary.main",
-          color: "primary.main",
-          py: 1.5,
-          textTransform: "none",
-        }}
-        onClick={handleOpenModal}
-      >
-        Alterar valor
-      </Button>
     </Box>
   )
 }
