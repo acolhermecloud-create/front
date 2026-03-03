@@ -184,16 +184,16 @@ export const UserBalanceInfo = ({ balance,
             <Divider orientation="vertical" flexItem /> {/* flexItem para ajustar altura do Divider */}
           </Stack>
         </Tooltip>
-        <Tooltip title="Suas kaixinhas">
+        <Tooltip title="Suas campanhas">
           <Stack direction="row" alignItems="center" spacing={1}> {/* Removendo flex: 1 */}
             <CardGiftcard sx={{ width: 26, height: 26 }} color="primary" fontSize="small" />
             <Stack direction="column" alignItems="center">
               <Typography variant="body2" fontSize={{ sm: '0.875rem', xs: '1rem' }} color="initial">
-                {userStickersCount} KA
+                {userStickersCount} CA
               </Typography>
               <Link href="/loja/adesivo-digital">
                 <Typography fontSize={{ xs: '0.6rem', sm: '0.675rem' }} color="initial">
-                  comprar kaixinhas
+                  comprar corações
                 </Typography>
               </Link>
             </Stack>

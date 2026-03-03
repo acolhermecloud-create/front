@@ -145,13 +145,13 @@ export default function BuyKaixinhas({ campaignId }) {
       {!showPayment && !paymentConfirmed && (
         <Container maxWidth="lg" sx={{ pt: 4, pb: 6 }}>
           <Typography variant="body2" color="initial">
-            Adquirir kaixinhas
+            Adquirir corações
           </Typography>
           <Typography variant="h6" color="initial">
-            Turbine sua kaixinha agora mesmo e arrecade mais ainda!
+            Turbine sua corações agora mesmo e arrecade mais ainda!
           </Typography>
           <Typography mt={2} variant="subtitle1" color="initial">
-            Escolha um pacote de kaixinhas e amplie as chances da sua campanha se destacar entre as mais queridas.
+            Escolha um pacote de corações e amplie as chances da sua campanha se destacar entre as mais queridas.
           </Typography>
           <Typography mt={4} variant="body2" fontWeight={800} color="initial">
             As vaquinhas mais populares ganham destaque especial no site, redes sociais e comunicações da nossa plataforma.
@@ -182,7 +182,7 @@ export default function BuyKaixinhas({ campaignId }) {
                       <Stack direction={'row'} display="flex" alignItems="center" justifyContent="space-between">
                         <CardGiftcard color="primary" />
                         <Typography color="primary" alignItems="center" variant="h6" fontWeight={600}>
-                          {plano.qtd} Kaixinha{plano.qtd > 1 && "s"}
+                          {plano.qtd} corações{plano.qtd > 1 && "s"}
                         </Typography>
                       </Stack>
                       <Stack>
@@ -251,32 +251,8 @@ export default function BuyKaixinhas({ campaignId }) {
           </Grid>
 
           <Typography mt={4} variant="body2" color="initial">
-            Escolha seu pacote de kaixinhas e dê visibilidade à sua causa agora mesmo!
+            Escolha seu pacote de corações e dê visibilidade à sua causa agora mesmo!
           </Typography>
-
-          <Stack direction={{ xs: 'column', sm: 'column' }} mt={2} spacing={2}>
-            <Typography variant="subtitle2" fontWeight={700} color="initial">
-              Está com dúvidas? Entre em contato conosco agora mesmo clicando no botão abaixo!
-            </Typography>
-            <Box sx={{display: 'flex', justifyContent: {xs: 'center', sm: 'start'}}}>
-              <Button
-                variant="contained"
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                startIcon={<WhatsApp style={{ color: '#FFF' }} />}
-                sx={{
-                  px: 1,
-                  py: 1,
-                  fontSize: "0.875rem",
-                  bgcolor: theme.palette.success.main,
-                  color: '#FFF'
-                }}
-              >
-                Fale conosco no WhatsApp
-              </Button>
-            </Box>
-          </Stack>
 
           <Typography mt={2} variant="body2" fontWeight={500} color="initial">
             Ou, <Link href="/minha-conta">clique aqui </Link>para ir para sua conta
