@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import crypto from "crypto"
 
 const useFacebookPixelApi = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -9,169 +8,158 @@ const useFacebookPixelApi = () => {
 
   const pixelIds = process.env.NEXT_PUBLIC_PIXEL_ID_CODE?.split("|") || []
   const accessTokens = process.env.NEXT_PUBLIC_PIXEL_TOKEN?.split("|") || []
+  const testEventCode = process.env.NEXT_PUBLIC_FACEBOOK_TEST_EVENT_CODE
 
-  const hashData = (data) => {
-    if (!data) return ""
-    return crypto.createHash("sha256").update(data.toLowerCase().trim()).digest("hex")
-  }
+  const hashData = async (data) => {
+    if (!data) return null
 
-  // Get browser and context information
-  const getBrowserInfo = () => {
-    if (typeof window === "undefined") return {}
+    const normalized = data.toLowerCase().trim()
 
-    return {
-      client_ip_address: null, // Will be automatically detected by Facebook
-      client_user_agent: navigator.userAgent,
-      fbc: getCookie("_fbc"), // Facebook click ID
-      fbp: getCookie("_fbp"), // Facebook browser ID
-    }
+    const encoder = new TextEncoder()
+    const dataBuffer = encoder.encode(normalized)
+
+    const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer)
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
   }
 
   const getCookie = (name) => {
     if (typeof document === "undefined") return null
+
     const value = `; ${document.cookie}`
     const parts = value.split(`; ${name}=`)
+
     if (parts.length === 2) return parts.pop()?.split(";").shift()
+
     return null
   }
 
-  // Validate if we have minimum required data
+  const getBrowserInfo = () => {
+    if (typeof window === "undefined") return {}
+
+    return {
+      client_user_agent: navigator.userAgent,
+      fbc: getCookie("_fbc"),
+      fbp: getCookie("_fbp"),
+    }
+  }
+
   const validateUserData = (eventParams) => {
     const hasEmail = eventParams.email && eventParams.email.includes("@")
-    const hasPhone = eventParams.phone && eventParams.phone.length >= 10
-    const hasName = eventParams.firstName || eventParams.lastName
+    const hasPhone =
+      eventParams.phone && eventParams.phone.replace(/\D/g, "").length >= 10
 
-    // Facebook requires at least email OR phone for effective matching
     return hasEmail || hasPhone
   }
 
-  const sendEventToFacebook = async (eventName, eventParams, customData = {}) => {
+  const sendEventToFacebook = async (eventName, eventParams = {}, customData = {}) => {
+    console.log("🚀 Disparando evento Facebook:", eventName)
+    console.log("📦 Params recebidos:", eventParams)
+
     setIsLoading(true)
     setError(null)
 
-    // Validate minimum required data
-    if (!validateUserData(eventParams)) {
-      console.warn(`⚠️ Evento ${eventName} não enviado: dados insuficientes de usuário`)
+    if (pixelIds.length !== accessTokens.length) {
+      const err = "Número de Pixel IDs e Tokens não correspondem"
+      console.error("❌ Configuração inválida:", err)
+      setError(err)
       setIsLoading(false)
-      return { success: false, error: "Insufficient user data" }
+      return
     }
 
-    if (pixelIds.length !== accessTokens.length) {
-      setError("Número de Pixel IDs e Tokens não correspondem.")
+    if (
+      eventName !== "PageView" &&
+      eventName !== "ViewContent" &&
+      !validateUserData(eventParams)
+    ) {
+      console.warn("⚠️ Evento cancelado por falta de dados de usuário")
       setIsLoading(false)
-      return { success: false, error: "Pixel configuration mismatch" }
+      return
     }
+
+    const browserInfo = getBrowserInfo()
+
+    console.log("🌐 Browser info:", browserInfo)
 
     const errors = []
     const successes = []
-    const browserInfo = getBrowserInfo()
 
     await Promise.all(
       pixelIds.map(async (pixelId, index) => {
         const token = accessTokens[index]
-        const apiUrl = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${token}`
 
-        // Prepare user data with proper hashing and validation
-        const userData = {}
+        let apiUrl = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${token}`
 
-        // Email (required if available)
-        if (eventParams.email && eventParams.email.includes("@")) {
-          userData.em = hashData(eventParams.email)
+        if (testEventCode) {
+          apiUrl += `&test_event_code=${testEventCode}`
+          console.log("🧪 Modo de teste ativado com código:", testEventCode)
         }
 
-        // Phone (required if available)
+        console.log("🔗 URL da API:", apiUrl)
+
+        const userData = {}
+
+        if (eventParams.email) {
+          userData.em = await hashData(eventParams.email)
+        }
+
         if (eventParams.phone) {
           const cleanPhone = eventParams.phone.replace(/\D/g, "")
           if (cleanPhone.length >= 10) {
-            userData.ph = hashData(cleanPhone)
+            userData.ph = await hashData(cleanPhone)
           }
         }
 
-        // Names
-        if (eventParams.firstName) {
-          userData.fn = hashData(eventParams.firstName)
-        }
-        if (eventParams.lastName) {
-          userData.ln = hashData(eventParams.lastName)
-        }
+        if (eventParams.firstName) userData.fn = await hashData(eventParams.firstName)
+        if (eventParams.lastName) userData.ln = await hashData(eventParams.lastName)
+        if (eventParams.city) userData.ct = await hashData(eventParams.city)
+        if (eventParams.state) userData.st = await hashData(eventParams.state)
+        if (eventParams.zipCode) userData.zp = await hashData(eventParams.zipCode)
+        if (eventParams.country) userData.country = await hashData(eventParams.country)
 
-        // Location data
-        if (eventParams.city) {
-          userData.ct = hashData(eventParams.city)
-        }
-        if (eventParams.state) {
-          userData.st = hashData(eventParams.state)
-        }
-        if (eventParams.zipCode) {
-          userData.zp = hashData(eventParams.zipCode)
-        }
-        if (eventParams.country) {
-          userData.country = hashData(eventParams.country)
-        }
-
-        // Gender and date of birth if available
-        if (eventParams.gender) {
-          userData.ge = hashData(eventParams.gender)
-        }
-        if (eventParams.dateOfBirth) {
-          userData.db = hashData(eventParams.dateOfBirth)
-        }
-
-        // External ID (user ID from your system)
         if (eventParams.externalId) {
-          userData.external_id = hashData(eventParams.externalId.toString())
+          userData.external_id = eventParams.externalId.toString()
         }
 
-        // Add browser context
-        Object.assign(userData, browserInfo)
+        if (browserInfo.client_user_agent)
+          userData.client_user_agent = browserInfo.client_user_agent
 
-        // Prepare custom data
+        if (browserInfo.fbc) userData.fbc = browserInfo.fbc
+        if (browserInfo.fbp) userData.fbp = browserInfo.fbp
+
         const customEventData = {
           currency: eventParams.currency || "BRL",
         }
 
-        // Add value only for purchase events or when explicitly provided
-        if (eventParams.value !== undefined && eventParams.value !== null) {
-          customEventData.value = Number.parseFloat(eventParams.value)
+        if (eventParams.value !== undefined) {
+          customEventData.value = parseFloat(eventParams.value)
         }
 
-        // Add content data
-        if (eventParams.contentName) {
-          customEventData.content_name = eventParams.contentName
-        }
-        if (eventParams.contentCategory) {
-          customEventData.content_category = eventParams.contentCategory
-        }
-        if (eventParams.contentIds && eventParams.contentIds.length > 0) {
-          customEventData.content_ids = eventParams.contentIds
-        }
-        if (eventParams.numItems) {
-          customEventData.num_items = Number.parseInt(eventParams.numItems)
-        }
-
-        // Add any additional custom data
         Object.assign(customEventData, customData)
-
-        // Remove empty values from custom data
-        Object.keys(customEventData).forEach((key) => {
-          if (customEventData[key] === "" || customEventData[key] === null || customEventData[key] === undefined) {
-            delete customEventData[key]
-          }
-        })
 
         const eventData = {
           data: [
             {
               event_name: eventName,
               event_time: Math.floor(Date.now() / 1000),
-              event_id: eventParams.eventId || `${eventName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              event_id:
+                eventParams.eventId ||
+                `${eventName}_${Date.now()}_${Math.random()
+                  .toString(36)
+                  .substring(2, 10)}`,
               action_source: "website",
-              event_source_url: typeof window !== "undefined" ? window.location.href : "",
+              event_source_url:
+                typeof window !== "undefined" ? window.location.href : "",
               user_data: userData,
               custom_data: customEventData,
             },
           ],
         }
+
+        console.log("📤 Payload enviado ao Facebook:")
+        console.log(JSON.stringify(eventData, null, 2))
 
         try {
           const response = await fetch(apiUrl, {
@@ -182,63 +170,54 @@ const useFacebookPixelApi = () => {
             body: JSON.stringify(eventData),
           })
 
+          console.log("📡 Status HTTP:", response.status)
+
           const data = await response.json()
 
+          console.log("📥 Resposta da API:", data)
+
           if (data.error) {
-            errors.push(`Pixel ${pixelId}: ${data.error.message}`)
             console.error(`❌ Erro no pixel ${pixelId}:`, data.error)
+            errors.push(data.error.message)
           } else {
-            console.log(`✅ Evento ${eventName} enviado com sucesso para pixel ${pixelId}:`, data)
-            successes.push(`Pixel ${pixelId}: Success`)
+            console.log(`✅ Evento ${eventName} enviado com sucesso para pixel ${pixelId}`)
+            successes.push(pixelId)
           }
         } catch (err) {
-          errors.push(`Pixel ${pixelId}: ${err.message}`)
-          console.error(`❌ Erro ao enviar evento para pixel ${pixelId}:`, err)
+          console.error("🔥 Erro na requisição:", err)
+          errors.push(err.message)
         }
-      }),
+      })
     )
 
-    if (errors.length > 0) {
-      setError(errors.join("; "))
-    }
+    console.log("📊 Resultado final:", {
+      sucessos: successes.length,
+      erros: errors.length,
+    })
 
     setIsLoading(false)
 
+    if (errors.length) {
+      setError(errors.join("; "))
+    }
+
     return {
       success: successes.length > 0,
-      errors: errors,
-      successes: successes,
+      errors,
+      successes,
     }
   }
 
-  // Specific event methods for better organization
-  const trackPageView = (eventParams) => {
-    return sendEventToFacebook("PageView", eventParams)
-  }
-
-  const trackViewContent = (eventParams) => {
-    return sendEventToFacebook("ViewContent", eventParams)
-  }
-
-  const trackInitiateCheckout = (eventParams) => {
-    return sendEventToFacebook("InitiateCheckout", eventParams)
-  }
-
-  const trackAddPaymentInfo = (eventParams) => {
-    return sendEventToFacebook("AddPaymentInfo", eventParams)
-  }
-
-  const trackPurchase = (eventParams) => {
-    return sendEventToFacebook("Purchase", eventParams)
-  }
-
-  const trackLead = (eventParams) => {
-    return sendEventToFacebook("Lead", eventParams)
-  }
-
-  const trackCompleteRegistration = (eventParams) => {
-    return sendEventToFacebook("CompleteRegistration", eventParams)
-  }
+  const trackPageView = (params) => sendEventToFacebook("PageView", params)
+  const trackViewContent = (params) => sendEventToFacebook("ViewContent", params)
+  const trackInitiateCheckout = (params) =>
+    sendEventToFacebook("InitiateCheckout", params)
+  const trackAddPaymentInfo = (params) =>
+    sendEventToFacebook("AddPaymentInfo", params)
+  const trackPurchase = (params) => sendEventToFacebook("Purchase", params)
+  const trackLead = (params) => sendEventToFacebook("Lead", params)
+  const trackCompleteRegistration = (params) =>
+    sendEventToFacebook("CompleteRegistration", params)
 
   return {
     sendEventToFacebook,
@@ -251,7 +230,6 @@ const useFacebookPixelApi = () => {
     trackCompleteRegistration,
     isLoading,
     error,
-    validateUserData,
   }
 }
 

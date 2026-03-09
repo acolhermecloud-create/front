@@ -27,8 +27,7 @@ const RootLayout = ({ children }) => {
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1554207512648166');
-              fbq('init', '988398956462728');
+              fbq('init', '588505823508409');
               fbq('track', 'PageView');
             `,
           }} />
@@ -62,9 +61,9 @@ const RootLayout = ({ children }) => {
         {/* noscript tags for tracking fallback */}
         <noscript>
           <img height="1" width="1" style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=1554207512648166&ev=PageView&noscript=1" />
-          <img height="1" width="1" style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=988398956462728&ev=PageView&noscript=1" />
+            src="https://www.facebook.com/tr?id=588505823508409&ev=PageView&noscript=1" />
+          {/*<img height="1" width="1" style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1419268469646601&ev=PageView&noscript=1" />*/}
           <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5JKHZXHS"
             height="0" width="0" style={{ display: "none", visibility: "hidden" }}></iframe>
         </noscript>
