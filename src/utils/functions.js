@@ -31,12 +31,14 @@ export function stringToColor(string) {
   return color;
 }
 
-export function stringAvatar(name) {
+export function stringAvatar(name = "User") {
+  const parts = name.split(" ")
+
   return {
     sx: {
       bgcolor: stringToColor(name),
     },
-    children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+    children: `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`,
   };
 }
 

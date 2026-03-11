@@ -382,9 +382,12 @@ export default function DonationDetails({ loading, donation }) {
             <Stack pt={1} direction={'row'}
               justifyContent={'space-between'} alignItems={'center'} spacing={2}>
               <AvatarGroup max={4}>
-                {supporters && supporters.map((supporter, index) =>
-                  <Avatar key={index} {...stringAvatar(supporter.name)} />
-                )}
+                {supporters?.map((supporter, index) => (
+                  <Avatar
+                    key={index}
+                    {...stringAvatar(supporter?.name || "User")}
+                  />
+                ))}
               </AvatarGroup>
               <Tooltip title="Número de adesivos recebidas">
                 <IconButton>
