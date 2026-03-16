@@ -132,7 +132,7 @@ export default function CheckoutDonate() {
       contentCategory: "donation",
       contentIds: [campaign?.id?.toString() || id?.toString() || ""],
 
-      eventId: `${campaign?.slug || id}_${Date.now()}`,
+      eventId: `${campaign?.slug || id}`,
       externalId: loggedUser?.id || null,
       country: "br",
 
@@ -173,7 +173,7 @@ export default function CheckoutDonate() {
           // Also send lead event for contact completion
           await trackLead({
             ...trackingData,
-            eventId: `lead_${campaign?.slug || id}_${Date.now()}`,
+            eventId: `lead_${campaign?.slug || id}`,
           })
 
           ga.trackBeginCheckout({
@@ -223,7 +223,7 @@ export default function CheckoutDonate() {
       const trackingData = getTrackingData()
       sendEventToFacebook("CustomizeProduct", {
         ...trackingData,
-        eventId: `customize_${campaign?.slug || id}_${Date.now()}`,
+        eventId: `customize_${campaign?.slug || id}}`,
       })
     }
   }
@@ -256,7 +256,7 @@ export default function CheckoutDonate() {
       const trackingData = {
         ...getTrackingData(),
         value: Number.parseFloat((sanitizedValue / 100).toFixed(2)),
-        eventId: `value_change_${campaign?.slug || id}_${Date.now()}`,
+        eventId: `value_change_${campaign?.slug || id}}`,
       }
 
       sendEventToFacebook("AddToCart", trackingData)
@@ -280,7 +280,7 @@ export default function CheckoutDonate() {
         contentName: response.data.campaign.title,
         contentCategory: "donation",
         contentIds: [response.data.campaign.id?.toString() || slug],
-        eventId: `view_${slug}_${Date.now()}`,
+        eventId: `view_${slug}`,
       }
 
       trackViewContent(trackingData)
@@ -289,10 +289,10 @@ export default function CheckoutDonate() {
   }
 
   const handleGeneratePix = async () => {
-    
+
     const valueInCents = Number.parseInt(valueOfDonation)
 
-    if(isNaN(valueInCents) || valueInCents < 1000) {
+    if (isNaN(valueInCents) || valueInCents < 1000) {
       toast.warning("Valor mínimo de doação é de R$ 10,00")
       return
     }
@@ -304,7 +304,7 @@ export default function CheckoutDonate() {
     // Track AddPaymentInfo when PIX is generated
     await trackAddPaymentInfo({
       ...trackingData,
-      eventId: `payment_info_${campaign?.slug || id}_${Date.now()}`,
+      eventId: `payment_info_${campaign?.slug || id}`,
     })
 
     ga.trackBeginCheckout({
@@ -356,9 +356,9 @@ export default function CheckoutDonate() {
       )
 
       // Track payment generation
-      await sendEventToFacebook("GenerateLead", {
+      await sendEventToFacebook("Lead", {
         ...trackingData,
-        eventId: `pix_generated_${campaign?.slug || id}_${Date.now()}`,
+        eventId: `pix_generated_${campaign?.slug || id}}`,
       })
 
       // Google Analytics - add_payment_info
@@ -389,7 +389,7 @@ export default function CheckoutDonate() {
         // Track Purchase with comprehensive data
         const purchaseData = {
           ...trackingData,
-          eventId: `purchase_${transactionId}_${Date.now()}`,
+          eventId: `purchase_${transactionId}`,
           transactionId: transactionId,
           orderId: transactionId,
         }
@@ -419,7 +419,7 @@ export default function CheckoutDonate() {
         // Track successful conversion
         await sendEventToFacebook("CompleteRegistration", {
           ...trackingData,
-          eventId: `conversion_${transactionId}_${Date.now()}`,
+          eventId: `conversion_${transactionId}}`,
         })
 
         // Google Analytics - purchase com UTMs
@@ -545,7 +545,7 @@ export default function CheckoutDonate() {
   }, [getToken])
 
   useEffect(() => {
-    if (isMounted.current && id) {
+    if (isMounted.current && id && utm) {
       isMounted.current = false
 
       setEmail(generateFakeEmail())
@@ -559,19 +559,8 @@ export default function CheckoutDonate() {
       const trackingData = getTrackingData()
 
       trackPageView({
-        value: Number.parseInt(value) / 100,
-        currency: "BRL",
-        contentName: trackingData.contentName,
-        contentCategory: "donation",
-        eventId: `pageview_${trackingData.contentIds[0]}_${Date.now()}`,
-
-        utm_source: trackingData.utm_source,
-        utm_medium: trackingData.utm_medium,
-        utm_campaign: trackingData.utm_campaign,
-        utm_term: trackingData.utm_term,
-        utm_content: trackingData.utm_content,
-
-        gclid: trackingData.gclid,
+        ...trackingData,
+        eventId: `pageview_${trackingData.contentIds[0]}`
       })
     }
   }, [id, value])

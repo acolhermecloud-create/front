@@ -36,12 +36,31 @@ const useFacebookPixelApi = () => {
     return null
   }
 
-  const getBrowserInfo = () => {
+  const getBrowserInfo = async () => {
     if (typeof window === "undefined") return {}
+
+    let ip = null
+
+    try {
+      const res = await fetch("https://api.ipify.org?format=json")
+      const data = await res.json()
+      ip = data.ip
+    } catch (e) {
+      ip = null
+    }
+
+    const fbclid = new URLSearchParams(window.location.search).get("fbclid")
+
+    let fbc = getCookie("_fbc")
+
+    if (!fbc && fbclid) {
+      fbc = `fb.1.${Date.now()}.${fbclid}`
+    }
 
     return {
       client_user_agent: navigator.userAgent,
-      fbc: getCookie("_fbc"),
+      client_ip_address: ip,
+      fbc,
       fbp: getCookie("_fbp"),
     }
   }
@@ -79,7 +98,7 @@ const useFacebookPixelApi = () => {
       return
     }
 
-    const browserInfo = getBrowserInfo()
+    const browserInfo = await getBrowserInfo()
 
     console.log("🌐 Browser info:", browserInfo)
 
