@@ -88,14 +88,8 @@ const useFacebookPixelApi = () => {
       return
     }
 
-    if (
-      eventName !== "PageView" &&
-      eventName !== "ViewContent" &&
-      !validateUserData(eventParams)
-    ) {
-      console.warn("⚠️ Evento cancelado por falta de dados de usuário")
-      setIsLoading(false)
-      return
+    if (!validateUserData(eventParams)) {
+      console.warn("Poucos dados para match, mas enviando mesmo assim")
     }
 
     const browserInfo = await getBrowserInfo()
@@ -121,29 +115,34 @@ const useFacebookPixelApi = () => {
         const userData = {}
 
         if (eventParams.email) {
-          userData.em = await hashData(eventParams.email)
+          userData.em = [await hashData(eventParams.email)]
         }
 
         if (eventParams.phone) {
           const cleanPhone = eventParams.phone.replace(/\D/g, "")
           if (cleanPhone.length >= 10) {
-            userData.ph = await hashData(cleanPhone)
+            userData.ph = [await hashData(cleanPhone)]
           }
         }
 
-        if (eventParams.firstName) userData.fn = await hashData(eventParams.firstName)
-        if (eventParams.lastName) userData.ln = await hashData(eventParams.lastName)
-        if (eventParams.city) userData.ct = await hashData(eventParams.city)
-        if (eventParams.state) userData.st = await hashData(eventParams.state)
-        if (eventParams.zipCode) userData.zp = await hashData(eventParams.zipCode)
-        if (eventParams.country) userData.country = await hashData(eventParams.country)
+        if (eventParams.firstName) userData.fn = [await hashData(eventParams.firstName)]
+        if (eventParams.lastName) userData.ln = [await hashData(eventParams.lastName)]
+        if (eventParams.city) userData.ct = [await hashData(eventParams.city)]
+        if (eventParams.state) userData.st = [await hashData(eventParams.state)]
+        if (eventParams.zipCode) userData.zp = [await hashData(eventParams.zipCode)]
+
+        userData.country = [await hashData('br')]
 
         if (eventParams.externalId) {
-          userData.external_id = eventParams.externalId.toString()
+          userData.external_id = await hashData(eventParams.externalId.toString())
         }
 
         if (browserInfo.client_user_agent)
           userData.client_user_agent = browserInfo.client_user_agent
+
+        if (browserInfo.client_ip_address) {
+          userData.client_ip_address = browserInfo.client_ip_address
+        }
 
         if (browserInfo.fbc) userData.fbc = browserInfo.fbc
         if (browserInfo.fbp) userData.fbp = browserInfo.fbp
@@ -153,10 +152,27 @@ const useFacebookPixelApi = () => {
         }
 
         if (eventParams.value !== undefined) {
-          customEventData.value = parseFloat(eventParams.value)
+          customEventData.value = parseFloat(
+            String(eventParams.value).replace(",", ".")
+          )
         }
 
         Object.assign(customEventData, customData)
+
+        const utmFields = {}
+
+        if (eventParams.utm_source) utmFields.utm_source = eventParams.utm_source
+        if (eventParams.utm_medium) utmFields.utm_medium = eventParams.utm_medium
+        if (eventParams.utm_campaign) utmFields.utm_campaign = eventParams.utm_campaign
+        if (eventParams.utm_term) utmFields.utm_term = eventParams.utm_term
+        if (eventParams.utm_content) utmFields.utm_content = eventParams.utm_content
+        if (eventParams.utm_id) utmFields.utm_id = eventParams.utm_id
+        if (eventParams.fbclid) utmFields.fbclid = eventParams.fbclid
+        if (eventParams.gclid) utmFields.gclid = eventParams.gclid
+        if (eventParams.sub1) utmFields.sub1 = eventParams.sub1
+        if (eventParams.traffic_source) utmFields.traffic_source = eventParams.traffic_source
+
+        Object.assign(customEventData, utmFields)
 
         const eventData = {
           data: [
