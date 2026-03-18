@@ -338,7 +338,6 @@ export default function CheckoutDonate() {
         top: 0,
         behavior: "smooth",
       })
-      setSecurityModalOpen(true)
 
       await sendUtmfyData(
         response.data.id,
