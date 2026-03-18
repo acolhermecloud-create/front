@@ -85,6 +85,9 @@ export default function CheckoutDonate() {
 
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
 
+  const [purchaseSent, setPurchaseSent] = useState(false)
+  const [checkingPayment, setCheckingPayment] = useState(false)
+
   // Estados para os campos de contato
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -354,12 +357,6 @@ export default function CheckoutDonate() {
         valueInCents,
       )
 
-      // Track payment generation
-      await sendEventToFacebook("Lead", {
-        ...trackingData,
-        eventId: `pix_generated_${campaign?.slug || id}}`,
-      })
-
       // Google Analytics - add_payment_info
       ga.trackAddPaymentInfo({
         value: trackingData.value,
@@ -393,32 +390,19 @@ export default function CheckoutDonate() {
           orderId: transactionId,
         }
 
-        // Send to multiple pixels as before
-        firePixelEvent(
-          "Purchase",
-          {
-            email,
-            value: (Number.parseInt(valueOfDonation) / 100).toFixed(2),
-          },
-          { eventID: "start-campaign-1554207512648166" },
-        )
+        const eventId = `purchase_${transactionId}`
 
-        firePixelEvent(
-          "Purchase",
-          {
-            email,
-            value: (Number.parseInt(valueOfDonation) / 100).toFixed(2),
-          },
-          { eventID: "start-campaign-988398956462728" },
-        )
+        // browser (pixel)
+        firePixelEvent("Purchase", {
+          value: trackingData.value,
+          currency: "BRL",
+        }, { eventID: eventId })
 
-        // Enhanced purchase tracking
-        await trackPurchase(purchaseData)
-
-        // Track successful conversion
-        await sendEventToFacebook("CompleteRegistration", {
+        // server (CAPI)
+        await trackPurchase({
           ...trackingData,
-          eventId: `conversion_${transactionId}}`,
+          eventId,
+          transactionId,
         })
 
         // Google Analytics - purchase com UTMs
@@ -565,22 +549,23 @@ export default function CheckoutDonate() {
   }, [id, value])
 
   useEffect(() => {
-    // Só executa o intervalo se transactionId estiver definido
     if (transactionId) {
       const interval = setInterval(async () => {
-        if (!paymentConfirmed) {
+        if (!paymentConfirmed && !purchaseSent && !checkingPayment) {
           try {
-            await handleCheckPayment() // Aguarda a execução da função
+            setCheckingPayment(true)
+            await handleCheckPayment()
           } catch (error) {
             console.error("Erro ao verificar o pagamento:", error)
+          } finally {
+            setCheckingPayment(false)
           }
         }
       }, 2000)
 
-      // Limpa o intervalo ao desmontar ou quando o pagamento for confirmado
       return () => clearInterval(interval)
     }
-  }, [transactionId, paymentConfirmed]) // Dependências importantes
+  }, [transactionId, paymentConfirmed, purchaseSent, checkingPayment])
 
   const sendLead = async (trackingData) => {
 
