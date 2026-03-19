@@ -382,14 +382,6 @@ export default function CheckoutDonate() {
 
         sendLead(trackingData)
 
-        // Track Purchase with comprehensive data
-        const purchaseData = {
-          ...trackingData,
-          eventId: `purchase_${transactionId}`,
-          transactionId: transactionId,
-          orderId: transactionId,
-        }
-
         const eventId = `purchase_${transactionId}`
 
         // browser (pixel)
@@ -397,13 +389,6 @@ export default function CheckoutDonate() {
           value: trackingData.value,
           currency: "BRL",
         }, { eventID: eventId })
-
-        // server (CAPI)
-        await trackPurchase({
-          ...trackingData,
-          eventId,
-          transactionId,
-        })
 
         // Google Analytics - purchase com UTMs
         ga.trackPurchase({
@@ -569,7 +554,7 @@ export default function CheckoutDonate() {
 
   const sendLead = async (trackingData) => {
 
-    const baseEventId = `${campaign?.slug || id}_${Date.now()}`
+    const baseEventId = `${campaign?.slug || id}`
 
     await sendEventToFacebook("CompleteRegistration", {
       ...trackingData,
