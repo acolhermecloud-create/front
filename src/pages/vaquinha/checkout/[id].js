@@ -497,7 +497,7 @@ export default function CheckoutDonate() {
 
   const generateFakeCPF = () => generateValidCPF(11)
 
-  const generateFakePhone = () => `55${generateRandomDigits(11)}`
+  const generateFakePhone = () => `${generateRandomDigits(11)}`
 
   useEffect(() => {
     validateTokenWithOutRedirect().then(() => {
@@ -507,7 +507,7 @@ export default function CheckoutDonate() {
         setName(loggedData.name)
         setDocument(loggedData.documentId)
         setEmail(loggedData.email)
-        setPhone(`+55${loggedData.phone}`)
+        setPhone(`${loggedData.phone}`)
       }
     })
   }, [getToken])
