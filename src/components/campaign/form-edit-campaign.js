@@ -145,7 +145,7 @@ export const EditCampaign = ({ handleUpdateImagesOfCampaign, campaign }) => {
     formData.append('CategoryId', category);
     formData.append('Description', description);
     formData.append('Title', title);
-    formData.append('FinancialGoal', parseFloat(goalRaw.replace(/\D/g, "")) / 100);
+    formData.append('FinancialGoal', goalRaw.replace(/\D/g, ""));
     formData.append('Deadline', deadLine);
 
     handleLoading();
