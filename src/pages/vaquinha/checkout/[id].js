@@ -304,11 +304,11 @@ export default function CheckoutDonate() {
 
     const trackingData = getTrackingData()
 
-    // Track AddPaymentInfo when PIX is generated
+    /* Track AddPaymentInfo when PIX is generated
     await trackAddPaymentInfo({
       ...trackingData,
       eventId: `payment_info_${campaign?.slug || id}`,
-    })
+    })*/
 
     ga.trackBeginCheckout({
       value: trackingData.value,

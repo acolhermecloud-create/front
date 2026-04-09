@@ -58,7 +58,7 @@ export default function UpSellByPlan() {
     if (response.status) {
       setSented(true);
     } else {
-      toast.error('Não foi possível enviar sua Kaixinha foi enviada para analise');
+      toast.error('Não foi possível enviar sua campanha foi enviada para analise');
     }
 
     handleCloseLoading();
@@ -129,7 +129,7 @@ export default function UpSellByPlan() {
       <Divider sx={{ my: 1 }} />
       <Stack>
         <Typography variant="h5" color="initial" textAlign={'center'}>Vamos alanvar sua
-          <span style={{ color: theme.palette.primary.main }}>&nbsp;Kaixinha</span></Typography>
+          <span style={{ color: theme.palette.primary.main }}>&nbsp;Campanha</span></Typography>
 
         <Grid container spacing={2} mt={2}>
           <Grid container item xs={12} justifyContent="center" spacing={2}>
@@ -216,7 +216,7 @@ export default function UpSellByPlan() {
                 <Typography variant="subtitle1" color="initial">Padrão</Typography>
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="body2" color="initial">
-                  Pode deixar, eu mesmo divulgo minha kaixinha 😉
+                  Pode deixar, eu mesmo divulgo minha campanha 😉
                 </Typography>
                 <Stack mt={2} direction={'row'} display={'flex'} justifyContent={'end'}>
                   <Link href="/minha-conta">
