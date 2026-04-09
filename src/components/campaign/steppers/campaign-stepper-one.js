@@ -59,11 +59,6 @@ export default function CampaignStepperOne({
 
     const goal = parseFloat(goalRaw.replace(/\D/g, "")) / 100;
 
-    if (isNaN(goal) || goal < 1500) {
-      toast.error('Defina uma meta com ao menos R$ 1.500,00 reais');
-      return;
-    }
-
     if (!title && title === '' || title.length < 10) {
       toast.error('Fornceça um título válido com ao menos 10 caracteres');
       return;
