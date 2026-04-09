@@ -30,7 +30,7 @@ import {
   Divider,
 } from "@mui/material"
 import { ExpandMore, CheckCircle, Pix, QrCode, ContentCopy, Receipt, PhoneAndroid, WarningAmber } from "@mui/icons-material"
-import { formatCurrency, generateValidCPF, truncateText, validateCNPJ, validateCPF, validateEmail } from "@/utils/functions"
+import { formatCurrency, generateValidCPF, hashData, truncateText, validateCNPJ, validateCPF, validateEmail } from "@/utils/functions"
 import { useCampaign } from "@/context/CampaignContext"
 import { useLoading } from "@/context/LoadingContext"
 import { useRouter } from "next/router"
@@ -388,7 +388,7 @@ export default function CheckoutDonate() {
         firePixelEvent("Purchase", {
           value: trackingData.value,
           currency: "BRL",
-        }, { eventID: eventId })
+        }, { eventID: await hashData(eventId) })
 
         // Google Analytics - purchase com UTMs
         ga.trackPurchase({

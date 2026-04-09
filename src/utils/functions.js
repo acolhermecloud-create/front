@@ -286,3 +286,18 @@ export const generateValidCPF = () => {
 
   return [...base, d1, d2].join("")
 }
+
+export const hashData = async (data) => {
+    if (!data) return null
+
+    const normalized = data.toLowerCase().trim()
+
+    const encoder = new TextEncoder()
+    const dataBuffer = encoder.encode(normalized)
+
+    const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer)
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  }

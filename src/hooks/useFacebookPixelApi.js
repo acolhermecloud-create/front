@@ -1,5 +1,6 @@
 "use client"
 
+import { hashData } from "@/utils/functions"
 import { useState } from "react"
 
 const useFacebookPixelApi = () => {
@@ -9,21 +10,6 @@ const useFacebookPixelApi = () => {
   const pixelIds = process.env.NEXT_PUBLIC_PIXEL_ID_CODE?.split("|") || []
   const accessTokens = process.env.NEXT_PUBLIC_PIXEL_TOKEN?.split("|") || []
   const testEventCode = process.env.NEXT_PUBLIC_FACEBOOK_TEST_EVENT_CODE
-
-  const hashData = async (data) => {
-    if (!data) return null
-
-    const normalized = data.toLowerCase().trim()
-
-    const encoder = new TextEncoder()
-    const dataBuffer = encoder.encode(normalized)
-
-    const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer)
-
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-  }
 
   const getCookie = (name) => {
     if (typeof document === "undefined") return null
