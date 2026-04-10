@@ -171,13 +171,13 @@ export default function CheckoutDonate() {
 
         // Only send if we have minimum required data
         if (trackingData.email || trackingData.phone) {
-          await trackInitiateCheckout(trackingData)
+          //await trackInitiateCheckout(trackingData)
 
           // Also send lead event for contact completion
-          await trackLead({
+          /*await trackLead({
             ...trackingData,
             eventId: `lead_${campaign?.slug || id}`,
-          })
+          })*/
 
           ga.trackBeginCheckout({
             value: trackingData.value,
@@ -262,7 +262,7 @@ export default function CheckoutDonate() {
         eventId: `value_change_${campaign?.slug || id}}`,
       }
 
-      sendEventToFacebook("AddToCart", trackingData)
+      //sendEventToFacebook("AddToCart", trackingData)
     }
 
     if (expanded === "panel3") {
@@ -286,7 +286,7 @@ export default function CheckoutDonate() {
         eventId: `view_${slug}`,
       }
 
-      trackViewContent(trackingData)
+      //trackViewContent(trackingData)
     }
     handleCloseLoading()
   }
@@ -380,15 +380,17 @@ export default function CheckoutDonate() {
 
         const trackingData = getTrackingData()
 
-        sendLead(trackingData)
+        //sendLead(trackingData)
 
         const eventId = `purchase_${transactionId}`
 
         // browser (pixel)
+        const hashPurchase = await hashData(eventId);
+        console.log("Hash do evento de compra:", hashPurchase, trackingData.value);
         firePixelEvent("Purchase", {
           value: trackingData.value,
           currency: "BRL",
-        }, { eventID: await hashData(eventId) })
+        }, { eventID: hashPurchase})
 
         // Google Analytics - purchase com UTMs
         ga.trackPurchase({
@@ -526,10 +528,10 @@ export default function CheckoutDonate() {
       // Track page view on initial load
       const trackingData = getTrackingData()
 
-      trackPageView({
+      /*trackPageView({
         ...trackingData,
         eventId: `pageview_${trackingData.contentIds[0]}`
-      })
+      })*/
     }
   }, [id, value])
 
